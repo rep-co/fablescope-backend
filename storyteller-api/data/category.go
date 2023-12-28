@@ -1,5 +1,7 @@
 package data
 
+import "github.com/rep-co/fablescope-backend/storyteller-api/types"
+
 type Category struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -7,8 +9,8 @@ type Category struct {
 }
 
 type Tag struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	SvgString   string `json:"svg_string"`
+	ID          int             `json:"id"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Icon        types.SvgString `json:"icon_svg"`
 }
