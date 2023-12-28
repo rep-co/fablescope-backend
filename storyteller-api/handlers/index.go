@@ -45,7 +45,8 @@ func HandleGetIndex(w http.ResponseWriter, _ *http.Request, _ httprouter.Params)
 	t := template.New("Index")
 	t, err := t.Parse(fancyIndex)
 	if err != nil {
-		fmt.Fprint(w, err)
+		fmt.Printf("An error occure at HandleGetIndex: %v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 	t.Execute(w, nil)
 }
