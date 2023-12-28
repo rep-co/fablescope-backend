@@ -18,6 +18,7 @@ func HandleGetCategory(
 
 	err := util.WriteJSON(w, http.StatusOK, categories)
 	if err != nil {
-		fmt.Fprintf(w, "err")
+		fmt.Printf("An error occure at HandleGetCategory: %v", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
