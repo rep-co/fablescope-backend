@@ -1,25 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rep-co/fablescope-backend/storyteller-api/handlers"
 )
-
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Welcome!\n")
-}
-
-func Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-}
 
 func main() {
 	router := httprouter.New()
-	router.GET("/", Index)
-	router.GET("/hello/:name", Hello)
+
+	router.GET("/", handlers.HandleGetIndex)
+	router.GET("/form/category", handlers.HandleGetCategory)
 
 	log.Println("JSON API server is listening on port: 8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
