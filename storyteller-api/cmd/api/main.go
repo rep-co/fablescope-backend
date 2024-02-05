@@ -13,6 +13,7 @@ func main() {
 
 	router.GET("/", handlers.HandleGetIndex)
 	router.GET("/form/category", handlers.HandleGetCategory)
+	router.GET("generate/story", handlers.HandleGetStory)
 
 	log.Println("JSON API server is listening on port: 8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
