@@ -9,6 +9,7 @@ import (
 func HandleGetStory(
 	w http.ResponseWriter,
 	_ *http.Request,
-	_ httprouter.Params,
+	ps httprouter.Params,
 ) {
+
 }
