@@ -6,6 +6,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/storyteller-api/handlers"
+	"github.com/rep-co/fablescope-backend/storyteller-api/middlewares"
 	"github.com/rep-co/fablescope-backend/storyteller-api/util"
 )
 
@@ -16,7 +17,14 @@ func main() {
 
 	router.GET("/", handlers.HandleGetIndex)
 	router.GET("/form/category", handlers.HandleGetCategory)
-	router.GET("/generate/story", handlers.HandleGetStory)
+	router.GET(
+		"/generate/story",
+		middlewares.ValidateStoryParameters(
+			middlewares.MakeStoryPrompt(
+				handlers.HandleGetStory,
+			),
+		),
+	)
 
 	log.Println("JSON API server is listening on port: 8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
