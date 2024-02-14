@@ -8,7 +8,7 @@ import (
 
 func HandleGetStory(
 	w http.ResponseWriter,
-	_ *http.Request,
+	r *http.Request,
 	ps httprouter.Params,
 ) {
 

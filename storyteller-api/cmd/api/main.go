@@ -20,9 +20,7 @@ func main() {
 	router.GET(
 		"/generate/story",
 		middlewares.ValidateStoryParameters(
-			middlewares.MakeStoryPrompt(
-				handlers.HandleGetStory,
-			),
+			handlers.HandleGetStory,
 		),
 	)
 
