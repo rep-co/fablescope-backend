@@ -51,9 +51,9 @@ func (s *OpenAIStoryGenerator) GenerateStory(
 				Content: fmt.Sprintf("%s%s", s.prompt, strings.Join(tags, ", ")),
 			},
 		},
-		MaxTokens:   256,
-		Temperature: 0.7,
-		TopP:        1,
+		MaxTokens:   720, //Token = 75% of a word, so here we pick story lenght
+		Temperature: 0.7, //As closer to 1.0 as more creative and vice versa
+		TopP:        1,   //As closer to 1.0 as more it will use natural language
 	}
 
 	resp, err := s.client.CreateChatCompletion(ctx, request)
