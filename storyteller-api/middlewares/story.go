@@ -16,9 +16,8 @@ func ValidateStoryParameters(
 		tags := strings.Split(rawTags, ",")
 
 		//Check if tags and categories are valid
-		//TODO: add proper context key type
 
-		ctx := context.WithValue(r.Context(), "tags", tags)
+		ctx := context.WithValue(r.Context(), contextKeyTags, tags)
 		next(w, r.WithContext(ctx), ps)
 	}
 
