@@ -13,9 +13,7 @@ func HandleGetStory(
 	r *http.Request,
 	_ httprouter.Params,
 ) {
-	fmt.Println("AMOGUS")
 	story := r.Context().Value("story").(string)
-	fmt.Println(story)
 
 	err := util.WriteJSON(w, http.StatusOK, story)
 	if err != nil {
