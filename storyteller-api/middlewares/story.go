@@ -2,10 +2,12 @@ package middlewares
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rep-co/fablescope-backend/storyteller-api/storygenerator"
 )
 
 func ValidateStoryParameters(
@@ -21,4 +23,23 @@ func ValidateStoryParameters(
 		next(w, r.WithContext(ctx), ps)
 	}
 
+}
+
+func GenerateStory(
+	next httprouter.Handle,
+	storyGenerator *storygenerator.OpenAIStoryGenerator,
+) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+		//TODO: unsafe code, need to be fixed
+		tags := r.Context().Value(contextKeyTags).([]string)
+		story, err := storyGenerator.GenerateStory(r.Context(), tags)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		//TODO: re-think how to properly use keys
+		ctx := context.WithValue(r.Context(), "story", story)
+		next(w, r.WithContext(ctx), ps)
+	}
 }

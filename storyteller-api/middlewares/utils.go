@@ -1,7 +1,8 @@
 package middlewares
 
 var (
-	contextKeyTags = contextKey("tags")
+	contextKeyTags  = contextKey("tags")
+	contextKeyStory = contextKey("story")
 )
 
 type contextKey string

@@ -25,7 +25,7 @@ func NewOpenAIStoryGenerator(apiKey, prompt string) *OpenAIStoryGenerator {
 
 	log.Printf("openai story generator enabled: %v", apiKey != "")
 
-	if apiKey == "" {
+	if apiKey != "" {
 		s.enabled = true
 	}
 
@@ -40,7 +40,7 @@ func (s *OpenAIStoryGenerator) GenerateStory(
 	defer s.mu.Unlock()
 
 	if !s.enabled {
-		return "", nil
+		return "disabled", nil
 	}
 
 	request := openai.ChatCompletionRequest{
