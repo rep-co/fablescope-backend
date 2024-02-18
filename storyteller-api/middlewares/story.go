@@ -18,7 +18,7 @@ func ValidateStoryParameters(
 		tags := strings.Split(rawTags, ",")
 
 		//Check if tags and categories are valid
-
+		//Mb it's cool to write validator instead of doing it here or using regex
 		ctx := context.WithValue(r.Context(), contextKeyTags, tags)
 		next(w, r.WithContext(ctx), ps)
 	}
@@ -31,15 +31,17 @@ func GenerateStory(
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-		//TODO: unsafe code, need to be fixed
-		tags := r.Context().Value(contextKeyTags).([]string)
+		tags, err := GetTagsKey(r.Context())
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		story, err := storyGenerator.GenerateStory(r.Context(), tags)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		//TODO: re-think how to properly use keys
-		ctx := context.WithValue(r.Context(), "story", story)
+		ctx := context.WithValue(r.Context(), contextKeyStory, story)
 		next(w, r.WithContext(ctx), ps)
 	}
 }
