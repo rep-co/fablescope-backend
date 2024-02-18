@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/rep-co/fablescope-backend/storyteller-api/data"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -35,12 +36,12 @@ func NewOpenAIStoryGenerator(apiKey, prompt string) *OpenAIStoryGenerator {
 func (s *OpenAIStoryGenerator) GenerateStory(
 	ctx context.Context,
 	tags []string,
-) (string, error) {
+) (data.Story, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if !s.enabled {
-		return "disabled", nil
+		return *data.NewStory(""), nil
 	}
 
 	request := openai.ChatCompletionRequest{
@@ -58,12 +59,12 @@ func (s *OpenAIStoryGenerator) GenerateStory(
 
 	resp, err := s.client.CreateChatCompletion(ctx, request)
 	if err != nil {
-		return "", err
+		return *data.NewStory(""), err
 	}
 
 	//Beautify responce
 	//TODO: split story into paragraphs
 	rawStory := strings.TrimSpace(resp.Choices[0].Message.Content)
 
-	return rawStory, nil
+	return *data.NewStory(rawStory), nil
 }
