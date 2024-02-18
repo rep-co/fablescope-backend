@@ -33,12 +33,16 @@ func GenerateStory(
 
 		tags, err := GetTagsKey(r.Context())
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("An errot occured at GenerateStory: %v", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
 		}
 
 		story, err := storyGenerator.GenerateStory(r.Context(), tags)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("An errot occured at GenerateStory: %v", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
 		}
 
 		ctx := context.WithValue(r.Context(), contextKeyStory, story)

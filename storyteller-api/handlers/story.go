@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -16,8 +16,7 @@ func HandleGetStory(
 ) {
 	story, err := middlewares.GetStoryKey(r.Context())
 	if err != nil {
-		fmt.Println("If we're here - we're fucked")
-		fmt.Printf("An error occure at HandleGetStory: %v", err)
+		log.Printf("An errot occured at HandleGetStory: %v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
@@ -25,7 +24,7 @@ func HandleGetStory(
 	//Потом зарефакторю, я обещаю
 	err2 := util.WriteJSON(w, http.StatusOK, story)
 	if err2 != nil {
-		fmt.Printf("An error occure at HandleGetStory: %v", err2)
+		log.Printf("An errot occured at HandleGetStory: %v", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
