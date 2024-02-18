@@ -16,8 +16,9 @@ func main() {
 	util.LoadEnv()
 
 	key := os.Getenv("CHAT_GPT_KEY")
+	prompt := os.Getenv("PROMPT")
 
-	var storyGenerator = storygenerator.NewOpenAIStoryGenerator(key, "Сгенерируй историю на 500 слов со следующими тегами:\n")
+	var storyGenerator = storygenerator.NewOpenAIStoryGenerator(key, prompt)
 
 	router := httprouter.New()
 
