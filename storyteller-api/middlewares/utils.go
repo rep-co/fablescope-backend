@@ -3,7 +3,7 @@ package middlewares
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"github.com/rep-co/fablescope-backend/storyteller-api/data"
 )
 
 var (
@@ -18,21 +18,19 @@ func (c contextKey) String() string {
 }
 
 func GetTagsKey(ctx context.Context) ([]string, error) {
-	if v := ctx.Value(contextKeyTags).([]string); v != nil {
-		fmt.Println(v)
-		return v, nil
+	if v := ctx.Value(contextKeyTags); v != nil {
+		return v.([]string), nil
 	}
-	err := &KeyWasNotFoundError{}
+	err := &KeyWasNotFoundError{keyName: string(contextKeyTags)}
 	return nil, err
 }
 
-func GetStoryKey(ctx context.Context) (string, error) {
-	if v := ctx.Value(contextKeyStory).(string); v != "" {
-		fmt.Println(v)
-		return v, nil
+func GetStoryKey(ctx context.Context) (data.Story, error) {
+	if v := ctx.Value(contextKeyStory); v != nil {
+		return v.(data.Story), nil
 	}
-	err := &KeyWasNotFoundError{keyName: string(contextKeyTags)}
-	return "", err
+	err := &KeyWasNotFoundError{keyName: string(contextKeyStory)}
+	return *data.NewStory(""), err
 }
 
 type KeyWasNotFoundError struct {
