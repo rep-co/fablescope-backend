@@ -16,7 +16,7 @@ func ValidateStoryParameters(
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		var rawTags data.TagNames
-		err := util.ReadJSON(w, r, http.StatusOK, &rawTags)
+		err := util.ReadJSON(r, &rawTags)
 		if err != nil {
 			log.Printf("An errot occured at ValidateStory: %v", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
