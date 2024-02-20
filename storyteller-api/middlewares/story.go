@@ -15,7 +15,7 @@ func ValidateStoryParameters(
 	next httprouter.Handle,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		var rawTags []data.TagName
+		var rawTags data.TagNames
 		err := util.ReadJSON(w, r, http.StatusOK, &rawTags)
 		if err != nil {
 			log.Printf("An errot occured at ValidateStory: %v", err)
@@ -25,7 +25,7 @@ func ValidateStoryParameters(
 
 		//Check if tags and categories are valid
 		//Mb it's cool to write validator instead of doing it here or using regex
-		tags := rawTags
+		tags := rawTags.TagNames
 		ctx := context.WithValue(r.Context(), contextKeyTags, tags)
 		next(w, r.WithContext(ctx), ps)
 	}

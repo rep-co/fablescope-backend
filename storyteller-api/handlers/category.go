@@ -14,7 +14,7 @@ func HandleGetCategory(
 	_ *http.Request,
 	_ httprouter.Params,
 ) {
-	categories := data.Categories
+	categories := data.CategoriesDefined
 
 	err := util.WriteJSON(w, http.StatusOK, categories)
 	if err != nil {
