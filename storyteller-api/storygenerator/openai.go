@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/rep-co/fablescope-backend/storyteller-api/data"
-	"github.com/rep-co/fablescope-backend/storyteller-api/util"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -45,7 +44,15 @@ func (s *OpenAIStoryGenerator) GenerateStory(
 		return *data.NewStory(""), nil
 	}
 
-	tags := util.SliceFieldToString(tagNames, "Name")
+	var sb strings.Builder
+	for i, tag := range tagNames {
+		sb.WriteString(tag.Name)
+		if i < len(tagNames)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	tags := sb.String()
+	log.Println(tags)
 
 	request := openai.ChatCompletionRequest{
 		Model: "gpt-3.5-turbo",

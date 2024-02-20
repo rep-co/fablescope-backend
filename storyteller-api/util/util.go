@@ -2,13 +2,10 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"reflect"
 	"regexp"
-	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -35,27 +32,4 @@ func WriteJSON(w http.ResponseWriter, status int, v any) error {
 
 func ReadJSON(r *http.Request, v any) error {
 	return json.NewDecoder(r.Body).Decode(v)
-}
-
-// Might be good to make it return error
-func SliceFieldToString(slice any, fieldName string) string {
-	v := reflect.ValueOf(slice)
-	if v.Kind() != reflect.Slice {
-		return ""
-	}
-
-	var builder strings.Builder
-	for i := 0; i < v.Len(); i++ {
-		elem := v.Index(i)
-		field := elem.FieldByName(fieldName)
-		if !field.IsValid() {
-			continue
-		}
-		builder.WriteString(fmt.Sprintf("%v", field.Interface()))
-		if i < v.Len()-1 {
-			builder.WriteString(", ")
-		}
-	}
-
-	return builder.String()
 }
