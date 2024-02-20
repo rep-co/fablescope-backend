@@ -46,7 +46,6 @@ func (s *OpenAIStoryGenerator) GenerateStory(
 	}
 
 	tags := util.SliceFieldToString(tagNames, "Name")
-	fmt.Println(tags)
 
 	request := openai.ChatCompletionRequest{
 		Model: "gpt-3.5-turbo",
