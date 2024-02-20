@@ -24,7 +24,7 @@ func main() {
 
 	router.GET("/", handlers.HandleGetIndex)
 	router.GET("/form/category", handlers.HandleGetCategory)
-	router.GET(
+	router.POST(
 		"/generate/story",
 		middlewares.ValidateStoryParameters(
 			middlewares.GenerateStory(
