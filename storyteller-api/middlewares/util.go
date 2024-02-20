@@ -17,9 +17,9 @@ func (c contextKey) String() string {
 	return "middlewares context key " + string(c)
 }
 
-func GetTagsKey(ctx context.Context) ([]string, error) {
+func GetTagsKey(ctx context.Context) ([]data.TagName, error) {
 	if v := ctx.Value(contextKeyTags); v != nil {
-		return v.([]string), nil
+		return v.([]data.TagName), nil
 	}
 	err := &KeyWasNotFoundError{keyName: string(contextKeyTags)}
 	return nil, err
@@ -37,6 +37,8 @@ type KeyWasNotFoundError struct {
 	keyName string
 }
 
+// TODO: mb it's better to use strings.Builder
+// But anyway the result will be the same
 func (m *KeyWasNotFoundError) Error() string {
 	var b bytes.Buffer
 
