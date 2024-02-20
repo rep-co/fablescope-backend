@@ -14,3 +14,7 @@ type Tag struct {
 	Description string          `json:"description"`
 	Icon        types.SvgString `json:"icon_svg"`
 }
+
+type TagName struct {
+	Name string `json:"name"`
+}
