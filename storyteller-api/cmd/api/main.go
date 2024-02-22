@@ -16,10 +16,9 @@ func main() {
 	util.LoadEnv()
 
 	apiKey := os.Getenv("CHAT_GPT_KEY")
-	catalogID := os.Getenv("YANDEX_CATALOG_ID")
 	prompt := os.Getenv("PROMPT")
 
-	storyGenerator := storygenerator.NewYandexStoryGenerator(catalogID, apiKey, prompt)
+	storyGenerator := storygenerator.NewOpenAIStoryGenerator(apiKey, prompt)
 
 	router := httprouter.New()
 
