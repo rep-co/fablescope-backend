@@ -35,7 +35,7 @@ func NewOpenAIStoryGenerator(apiKey, prompt string) *OpenAIStoryGenerator {
 
 func (s *OpenAIStoryGenerator) GenerateStory(
 	ctx context.Context,
-	tagNames []data.TagName,
+	tags string,
 ) (data.Story, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -43,16 +43,6 @@ func (s *OpenAIStoryGenerator) GenerateStory(
 	if !s.enabled {
 		return *data.NewStory(""), nil
 	}
-
-	var sb strings.Builder
-	for i, tag := range tagNames {
-		sb.WriteString(tag.Name)
-		if i < len(tagNames)-1 {
-			sb.WriteString(", ")
-		}
-	}
-	tags := sb.String()
-	log.Println(tags)
 
 	request := openai.ChatCompletionRequest{
 		Model: "gpt-3.5-turbo",

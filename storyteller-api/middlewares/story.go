@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/storyteller-api/data"
@@ -34,15 +35,24 @@ func ValidateStoryParameters(
 
 func GenerateStory(
 	next httprouter.Handle,
-	storyGenerator *storygenerator.OpenAIStoryGenerator,
+	storyGenerator storygenerator.StoryGenerator,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		tags, err := GetTagsKey(r.Context())
+		tagsRaw, err := GetTagsKey(r.Context())
 		if err != nil {
 			log.Printf("An errot occured at GenerateStory: %v", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
+		var sb strings.Builder
+		for i, tag := range tagsRaw {
+			sb.WriteString(tag.Name)
+			if i < len(tagsRaw)-1 {
+				sb.WriteString(", ")
+			}
+		}
+		tags := sb.String()
 
 		story, err := storyGenerator.GenerateStory(r.Context(), tags)
 		if err != nil {
