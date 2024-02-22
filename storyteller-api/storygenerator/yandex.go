@@ -23,7 +23,7 @@ func NewYandexStoryGenerator(
 }
 func (s *YandexStoryGenerator) GenerateStory(
 	ctx context.Context,
-	tags string,
-) (data.Story, error) {
-	return data.Story{}, nil
+	tagNames []data.TagName,
+) (*data.Story, error) {
+	return &data.Story{}, nil
 }

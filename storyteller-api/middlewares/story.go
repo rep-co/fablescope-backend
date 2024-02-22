@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/storyteller-api/data"

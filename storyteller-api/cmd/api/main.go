@@ -15,7 +15,7 @@ import (
 func main() {
 	util.LoadEnv()
 
-	apiKey := os.Getenv("CHAT_GPT_KEY")
+	apiKey := os.Getenv("YANDEX_GPT_API_KEY")
 	catalogID := os.Getenv("YANDEX_CATALOG_ID")
 	prompt := os.Getenv("PROMPT")
 
