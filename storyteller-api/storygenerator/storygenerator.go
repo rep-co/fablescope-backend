@@ -9,6 +9,6 @@ import (
 type StoryGenerator interface {
 	GenerateStory(
 		ctx context.Context,
-		tags string,
-	) (data.Story, error)
+		tagNames []data.TagName,
+	) (*data.Story, error)
 }

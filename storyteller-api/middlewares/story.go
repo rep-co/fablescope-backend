@@ -38,21 +38,12 @@ func GenerateStory(
 	storyGenerator storygenerator.StoryGenerator,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		tagsRaw, err := GetTagsKey(r.Context())
+		tags, err := GetTagsKey(r.Context())
 		if err != nil {
 			log.Printf("An errot occured at GenerateStory: %v", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-
-		var sb strings.Builder
-		for i, tag := range tagsRaw {
-			sb.WriteString(tag.Name)
-			if i < len(tagsRaw)-1 {
-				sb.WriteString(", ")
-			}
-		}
-		tags := sb.String()
 
 		story, err := storyGenerator.GenerateStory(r.Context(), tags)
 		if err != nil {
