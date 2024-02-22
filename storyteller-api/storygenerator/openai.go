@@ -36,23 +36,15 @@ func NewOpenAIStoryGenerator(apiKey, prompt string) *OpenAIStoryGenerator {
 func (s *OpenAIStoryGenerator) GenerateStory(
 	ctx context.Context,
 	tagNames []data.TagName,
-) (data.Story, error) {
+) (*data.Story, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if !s.enabled {
-		return *data.NewStory(""), nil
+		return data.NewStory(""), nil
 	}
 
-	var sb strings.Builder
-	for i, tag := range tagNames {
-		sb.WriteString(tag.Name)
-		if i < len(tagNames)-1 {
-			sb.WriteString(", ")
-		}
-	}
-	tags := sb.String()
-	log.Println(tags)
+	tags := tagNamesToString(tagNames)
 
 	request := openai.ChatCompletionRequest{
 		Model: "gpt-3.5-turbo",
@@ -69,12 +61,12 @@ func (s *OpenAIStoryGenerator) GenerateStory(
 
 	resp, err := s.client.CreateChatCompletion(ctx, request)
 	if err != nil {
-		return *data.NewStory(""), err
+		return data.NewStory(""), err
 	}
 
 	//Beautify responce
 	//TODO: split story into paragraphs
 	rawStory := strings.TrimSpace(resp.Choices[0].Message.Content)
 
-	return *data.NewStory(rawStory), nil
+	return data.NewStory(rawStory), nil
 }
