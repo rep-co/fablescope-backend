@@ -19,7 +19,7 @@ func main() {
 	catalogID := os.Getenv("YANDEX_CATALOG_ID")
 	prompt := os.Getenv("PROMPT")
 
-	storyGenerator := storygenerator.NewYandexStoryGenerator(catalogID, apiKey, prompt)
+	storyGenerator := storygenerator.NewYandexStoryGenerator(apiKey, catalogID, prompt)
 
 	router := httprouter.New()
 
