@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -45,7 +45,7 @@ func HandleGetIndex(w http.ResponseWriter, _ *http.Request, _ httprouter.Params)
 	t := template.New("Index")
 	t, err := t.Parse(fancyIndex)
 	if err != nil {
-		fmt.Printf("An error occure at HandleGetIndex: %v", err)
+		log.Printf("An error occured at HandleGetIndex: %v.", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 	t.Execute(w, nil)

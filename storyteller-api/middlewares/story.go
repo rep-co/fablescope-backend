@@ -18,7 +18,7 @@ func ValidateStoryParameters(
 		var rawTags data.TagNames
 		err := util.ReadJSON(r, &rawTags)
 		if err != nil {
-			log.Printf("An errot occured at ValidateStory: %v", err)
+			log.Printf("An error occured at ValidateStory: %v.", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
@@ -39,14 +39,14 @@ func GenerateStory(
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		tags, err := GetTagsKey(r.Context())
 		if err != nil {
-			log.Printf("An errot occured at GenerateStory: %v", err)
+			log.Printf("An error occured at GenerateStory: %v.", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
 		story, err := storyGenerator.GenerateStory(r.Context(), tags)
 		if err != nil {
-			log.Printf("An errot occured at GenerateStory: %v", err)
+			log.Printf("An error occured at GenerateStory: %v.", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
