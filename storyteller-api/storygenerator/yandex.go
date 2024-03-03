@@ -44,7 +44,7 @@ func (s *YandexStoryGenerator) GenerateStory(
 	defer s.mu.Unlock()
 
 	if !s.enabled {
-		return data.NewStory(""), nil
+		return data.NewStoryEmpty(), nil
 	}
 
 	tags := tagNamesToString(tagNames)
@@ -69,7 +69,7 @@ func (s *YandexStoryGenerator) GenerateStory(
 	}
 	response, err := s.client.CreateRequest(ctx, request)
 	if err != nil {
-		return data.NewStory(""), err
+		return data.NewStoryEmpty(), err
 	}
 
 	rawStory := response.Result.Alternatives[0].Message.Text

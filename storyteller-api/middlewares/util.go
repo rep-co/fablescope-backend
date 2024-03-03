@@ -31,7 +31,7 @@ func GetStoryKey(ctx context.Context) (*data.Story, error) {
 		return v.(*data.Story), nil
 	}
 	err := &KeyWasNotFoundError{keyName: string(contextKeyStory)}
-	return data.NewStory(""), err
+	return data.NewStoryEmpty(), err
 }
 
 type KeyWasNotFoundError struct {
