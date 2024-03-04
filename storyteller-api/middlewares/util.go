@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/rep-co/fablescope-backend/storyteller-api/data"
 )
