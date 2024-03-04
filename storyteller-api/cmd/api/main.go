@@ -7,6 +7,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/storyteller-api/handlers"
+	"github.com/rep-co/fablescope-backend/storyteller-api/iamgenerator"
 	"github.com/rep-co/fablescope-backend/storyteller-api/middlewares"
 	"github.com/rep-co/fablescope-backend/storyteller-api/storygenerator"
 	"github.com/rep-co/fablescope-backend/storyteller-api/util"
@@ -15,11 +16,19 @@ import (
 func main() {
 	util.LoadEnv()
 
-	apiKey := os.Getenv("YANDEX_GPT_API_KEY")
+	//apiKey := os.Getenv("YANDEX_GPT_API_KEY")
+	apiGatewayID := os.Getenv("YANDEX_APIGATEWAY_ID")
 	catalogID := os.Getenv("YANDEX_CATALOG_ID")
 	prompt := os.Getenv("PROMPT")
 
-	storyGenerator := storygenerator.NewYandexStoryGeneratorWithAPIKey(apiKey, catalogID, prompt)
+	//storyGenerator := storygenerator.NewYandexStoryGeneratorWithAPIKey(apiKey, catalogID, prompt)
+
+	iamTokenGenerator := iamgenerator.NewIAMTokenHTTP(apiGatewayID)
+	iamToken, err := iamTokenGenerator.GenerateToken()
+	if err != nil {
+		log.Printf("Can't get token %s", err)
+	}
+	storyGenerator := storygenerator.NewYandexStoryGeneratorWithIAMToken(iamToken, catalogID, prompt)
 
 	router := httprouter.New()
 

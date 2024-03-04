@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// TODO: when it will be decided how to deploy refactor this mess
 // You are entering nasty dirty code
 // I promise to refactor when i will understand what exactly do i need
 
