@@ -18,13 +18,13 @@ type YandexStoryGenerator struct {
 	mu        sync.Mutex
 }
 
-func NewYandexStoryGenerator(
+func NewYandexStoryGeneratorWithAPIKey(
 	apiKey,
 	catalogID,
 	prompt string,
 ) *YandexStoryGenerator {
 	s := &YandexStoryGenerator{
-		client:    yandexgpt.NewYandexGPTClient(apiKey),
+		client:    yandexgpt.NewYandexGPTClientWithAPIKey(apiKey),
 		prompt:    prompt,
 		catalogID: catalogID,
 	}
@@ -36,6 +36,26 @@ func NewYandexStoryGenerator(
 
 	return s
 }
+
+func NewYandexStoryGeneratorWithIAMToken(
+	iamToken,
+	catalogID,
+	prompt string,
+) *YandexStoryGenerator {
+	s := &YandexStoryGenerator{
+		client:    yandexgpt.NewYandexGPTClientWithIAMToken(iamToken),
+		prompt:    prompt,
+		catalogID: catalogID,
+	}
+	log.Printf("yandexgpt story generator enabled: %v", iamToken != "")
+
+	if iamToken != "" {
+		s.enabled = true
+	}
+
+	return s
+}
+
 func (s *YandexStoryGenerator) GenerateStory(
 	ctx context.Context,
 	tagNames []data.TagName,
@@ -44,7 +64,7 @@ func (s *YandexStoryGenerator) GenerateStory(
 	defer s.mu.Unlock()
 
 	if !s.enabled {
-		return data.NewStoryEmpty(), nil
+		return data.NewStoryEmpty(), fmt.Errorf("story generator is not enabled")
 	}
 
 	tags := tagNamesToString(tagNames)
