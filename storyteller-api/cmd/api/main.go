@@ -16,18 +16,17 @@ import (
 func main() {
 	util.LoadEnv()
 
-	//apiKey := os.Getenv("YANDEX_GPT_API_KEY")
 	apiGatewayID := os.Getenv("YANDEX_APIGATEWAY_ID")
 	catalogID := os.Getenv("YANDEX_CATALOG_ID")
 	prompt := os.Getenv("PROMPT")
-
-	//storyGenerator := storygenerator.NewYandexStoryGeneratorWithAPIKey(apiKey, catalogID, prompt)
 
 	iamTokenGenerator := iamgenerator.NewIAMTokenHTTP(apiGatewayID)
 	iamToken, err := iamTokenGenerator.GenerateToken()
 	if err != nil {
 		log.Printf("Can't get token %s", err)
+		return
 	}
+
 	storyGenerator := storygenerator.NewYandexStoryGeneratorWithIAMToken(iamToken, catalogID, prompt)
 
 	router := httprouter.New()

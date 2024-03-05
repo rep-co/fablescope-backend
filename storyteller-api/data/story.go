@@ -22,7 +22,7 @@ func NewStoryEmpty() *Story {
 func NewStory(rawStory string) *Story {
 	rawStory = validateRawStory(rawStory)
 
-	// Ger indexes
+	// Get indexes
 	titleIndex := strings.Index(rawStory, "TITLE:")
 	moralIndex := strings.Index(rawStory, "MORAL:")
 	textIndex := strings.Index(rawStory, "TEXT:")
