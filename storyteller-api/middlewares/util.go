@@ -1,8 +1,9 @@
 package middlewares
 
 import (
-	"bytes"
 	"context"
+	"fmt"
+
 	"github.com/rep-co/fablescope-backend/storyteller-api/data"
 )
 
@@ -19,31 +20,40 @@ func (c contextKey) String() string {
 
 func GetTagsKey(ctx context.Context) ([]data.TagName, error) {
 	if v := ctx.Value(contextKeyTags); v != nil {
-		return v.([]data.TagName), nil
+		if v, ok := v.([]data.TagName); ok {
+			return v, nil
+		}
+		err := &KeyHasWrongTypeError{keyName: string(contextKeyTags)}
+		return nil, err
 	}
 	err := &KeyWasNotFoundError{keyName: string(contextKeyTags)}
 	return nil, err
 }
 
-func GetStoryKey(ctx context.Context) (data.Story, error) {
+func GetStoryKey(ctx context.Context) (*data.Story, error) {
 	if v := ctx.Value(contextKeyStory); v != nil {
-		return v.(data.Story), nil
+		if v, ok := v.(*data.Story); ok {
+			return v, nil
+		}
+		err := &KeyHasWrongTypeError{keyName: string(contextKeyStory)}
+		return data.NewStoryEmpty(), err
 	}
 	err := &KeyWasNotFoundError{keyName: string(contextKeyStory)}
-	return *data.NewStory(""), err
+	return data.NewStoryEmpty(), err
 }
 
 type KeyWasNotFoundError struct {
 	keyName string
 }
 
-// TODO: mb it's better to use strings.Builder
-// But anyway the result will be the same
 func (m *KeyWasNotFoundError) Error() string {
-	var b bytes.Buffer
+	return fmt.Sprintf("key was not found: %s", m.keyName)
+}
 
-	b.WriteString("Key was not found: ")
-	b.WriteString(m.keyName)
+type KeyHasWrongTypeError struct {
+	keyName string
+}
 
-	return b.String()
+func (m *KeyHasWrongTypeError) Error() string {
+	return fmt.Sprintf("key has wrong type: %s. Can't get", m.keyName)
 }

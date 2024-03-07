@@ -16,15 +16,13 @@ func HandleGetStory(
 ) {
 	story, err := middlewares.GetStoryKey(r.Context())
 	if err != nil {
-		log.Printf("An errot occured at HandleGetStory: %v", err)
+		log.Printf("An error occured at HandleGetStory: %v.", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 
-	//TODO: why there is an error when using err :=?????
-	//Потом зарефакторю, я обещаю
-	err2 := util.WriteJSON(w, http.StatusOK, story)
-	if err2 != nil {
-		log.Printf("An errot occured at HandleGetStory: %v", err)
+	errJSON := util.WriteJSON(w, http.StatusOK, story)
+	if errJSON != nil {
+		log.Printf("An error occured at HandleGetStory: %v.", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
 }
