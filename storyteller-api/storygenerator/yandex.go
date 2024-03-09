@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/rep-co/fablescope-backend/storyteller-api/data"
-	"github.com/rep-co/fablescope-backend/storyteller-api/pkg/yandexgpt"
+	"github.com/sheeiavellie/go-yandexgpt"
 )
 
 type YandexStoryGenerator struct {
