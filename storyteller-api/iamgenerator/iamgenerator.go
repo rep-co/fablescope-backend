@@ -2,7 +2,6 @@ package iamgenerator
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -15,27 +14,24 @@ type IAMTokenGenerator interface {
 }
 
 const (
-	protocol      = "https://"
-	apiGatewayURL = ".apigw.yandexcloud.net"
+	serverlessURL = "http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token"
 )
 
 type IAMTokenHTTPResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
-type IAMTokenHTTP struct {
-	client       *http.Client
-	apiGatewayID string
+type IAMTokenServerless struct {
+	client *http.Client
 }
 
-func NewIAMTokenHTTP(apiGatewayID string) *IAMTokenHTTP {
-	return &IAMTokenHTTP{
-		client:       &http.Client{},
-		apiGatewayID: apiGatewayID,
+func NewIAMTokenServerless() *IAMTokenServerless {
+	return &IAMTokenServerless{
+		client: &http.Client{},
 	}
 }
 
-func (iam *IAMTokenHTTP) GenerateToken() (string, error) {
+func (iam *IAMTokenServerless) GenerateToken() (string, error) {
 	request, err := iam.newRequest()
 	if err != nil {
 		return "", err
@@ -49,8 +45,8 @@ func (iam *IAMTokenHTTP) GenerateToken() (string, error) {
 	return response.AccessToken, nil
 }
 
-func (iam *IAMTokenHTTP) newRequest() (*http.Request, error) {
-	url := fmt.Sprintf("%s%s%s/iam", protocol, iam.apiGatewayID, apiGatewayURL)
+func (iam *IAMTokenServerless) newRequest() (*http.Request, error) {
+	url := serverlessURL
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -58,7 +54,9 @@ func (iam *IAMTokenHTTP) newRequest() (*http.Request, error) {
 	return request, nil
 }
 
-func (iam *IAMTokenHTTP) sendRequest(request *http.Request, v any) error {
+func (iam *IAMTokenServerless) sendRequest(request *http.Request, v any) error {
+	request.Header.Set("Metadata-Flavor", "Google")
+
 	response, err := iam.client.Do(request)
 	if err != nil {
 		return err
