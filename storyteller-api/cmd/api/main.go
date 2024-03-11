@@ -16,6 +16,7 @@ import (
 func main() {
 	util.LoadEnv()
 
+	port := os.Getenv("PORT")
 	catalogID := os.Getenv("YANDEX_CATALOG_ID")
 	prompt := os.Getenv("PROMPT")
 
@@ -42,6 +43,6 @@ func main() {
 		),
 	)
 
-	log.Println("JSON API server is listening on port: 8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Printf("JSON API server is listening on port: %s", port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
