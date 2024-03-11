@@ -16,11 +16,10 @@ import (
 func main() {
 	util.LoadEnv()
 
-	apiGatewayID := os.Getenv("YANDEX_APIGATEWAY_ID")
 	catalogID := os.Getenv("YANDEX_CATALOG_ID")
 	prompt := os.Getenv("PROMPT")
 
-	iamTokenGenerator := iamgenerator.NewIAMTokenHTTP(apiGatewayID)
+	iamTokenGenerator := iamgenerator.NewIAMTokenServerless()
 	iamToken, err := iamTokenGenerator.GenerateToken()
 	if err != nil {
 		log.Printf("Can't get token %s", err)
