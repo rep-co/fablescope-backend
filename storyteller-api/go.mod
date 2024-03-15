@@ -5,7 +5,6 @@ go 1.22.0
 require (
 	github.com/joho/godotenv v1.5.1
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/sashabaranov/go-openai v1.19.3
 )
 
-require github.com/sheeiavellie/go-yandexgpt v0.1.0 // indirect
+require github.com/sheeiavellie/go-yandexgpt v0.1.0
