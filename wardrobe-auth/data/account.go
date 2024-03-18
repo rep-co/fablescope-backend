@@ -9,8 +9,8 @@ type AccountCredentials struct {
 }
 
 type Account struct {
-	ID       uuid.UUID
-	Name     string
-	Email    string
-	Password string
+	ID           uuid.UUID
+	Name         string
+	Email        string
+	HashPassword string
 }
