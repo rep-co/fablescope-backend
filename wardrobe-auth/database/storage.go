@@ -1,4 +1,4 @@
-package main
+package database
 
 import "github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 
