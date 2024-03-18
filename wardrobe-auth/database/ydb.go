@@ -2,6 +2,8 @@ package database
 
 import (
 	"database/sql"
+
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 	_ "github.com/ydb-platform/ydb-go-sdk/v3"
 )
 
@@ -27,4 +29,15 @@ func NewYDBStorage() (*YDBStorage, error) {
 	}, nil
 }
 
-func (s *YDBStorage) CreateAccount(*data.Account) error
+func (s *YDBStorage) CreateAccount(*data.AccountCredentials) error {
+	return nil
+}
+func (s *YDBStorage) GetAccount(*data.AccountCredentials) (*data.Account, error) {
+	return nil, nil
+}
+func (s *YDBStorage) UpdateAccount(*data.AccountCredentials) (*data.Account, error) {
+	return nil, nil
+}
+func (s *YDBStorage) DeleteAccount(*data.AccountCredentials) error {
+	return nil
+}
