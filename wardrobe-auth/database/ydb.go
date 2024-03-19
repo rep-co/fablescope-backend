@@ -30,7 +30,10 @@ func NewYDBStorage() (*YDBStorage, error) {
 }
 
 func (s *YDBStorage) Init() error {
-	return s.createAccountTable()
+	if err := s.createAccountTable(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *YDBStorage) createAccountTable() error {
@@ -50,12 +53,12 @@ func (s *YDBStorage) createAccountTable() error {
 func (s *YDBStorage) CreateAccount(*data.AccountRequest) error {
 	return nil
 }
-func (s *YDBStorage) GetAccount(*data.AccountRequest) (*data.Account, error) {
+func (s *YDBStorage) GetAccount(email, password string) (*data.Account, error) {
 	return nil, nil
 }
-func (s *YDBStorage) UpdateAccount(*data.AccountRequest) (*data.Account, error) {
+func (s *YDBStorage) UpdateAccount(email, password string) (*data.Account, error) {
 	return nil, nil
 }
-func (s *YDBStorage) DeleteAccount(*data.AccountRequest) error {
+func (s *YDBStorage) DeleteAccount(email, password string) error {
 	return nil
 }
