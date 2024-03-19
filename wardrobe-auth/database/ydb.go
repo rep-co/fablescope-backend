@@ -29,6 +29,24 @@ func NewYDBStorage() (*YDBStorage, error) {
 	}, nil
 }
 
+func (s *YDBStorage) Init() error {
+	return s.createAccountTable()
+}
+
+func (s *YDBStorage) createAccountTable() error {
+	query :=
+		`CREATE TABLE IF NOT EXISTS account (
+            account_id Uuid,
+            name String,
+            email String,
+            password String,
+            PRIMARY KEY (account_id)
+        );`
+
+	_, err := s.db.Exec(query)
+	return err
+}
+
 func (s *YDBStorage) CreateAccount(*data.AccountCredentials) error {
 	return nil
 }
