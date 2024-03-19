@@ -8,12 +8,13 @@ import (
 )
 
 type YDBStorage struct {
-	db *sql.DB
+	db     *sql.DB
+	hasher any
 }
 
 func NewYDBStorage() (*YDBStorage, error) {
-	connStr := "grpcs://ydb.serverless.yandexcloud.net:2135/?database=/ru-central1/b1gih93q5tulltkd8r47/etnav8lc4tnqftk3fu2m&token="
-	token := "t1.9euelZqUl87Ij8fPzJHJj8-Jnc2VkO3rnpWaiZCLzM-eipuXkZvPy5mOx5Hl9PcfeBxQ-e9ACgSP3fT3XyYaUPnvQAoEj83n9euelZqOlYuXlpfIyp6KjIvPncaWie_8xeuelZqOlYuXlpfIyp6KjIvPncaWiQ.WNt--gfZNjhKNOQFwyNIwuFczO4hSkjQUFAeBVYmSpt9boUWyf2MimzRYK3mSkBeKrFQUU0wp8qnBFeGfJ_mBw"
+	connStr := "grpcs://ydb.serverless.yandexcloud.net:2135/ru-central1/b1gih93q5tulltkd8r47/etnav8lc4tnqftk3fu2m?token="
+	token := "t1.9euelZrOk5SczomLypOXlImOlImLle3rnpWaiZCLzM-eipuXkZvPy5mOx5Hl8_cTGhxQ-e9nQHhh_N3z91NIGVD572dAeGH8zef1656Vmp6cnpeUiciJkMiQmpGJyIzH7_zF656Vmp6cnpeUiciJkMiQmpGJyIzH.AvLrBtEmKuEtJXONEcEGhNaacbgKwdlnZaC7zxVkN3LgpZzKclsTCPIUCu6uPwn6wos6VVa7wowFTTUyEGl9Cw"
 
 	db, err := sql.Open("ydb", connStr+token)
 	if err != nil {
@@ -38,27 +39,63 @@ func (s *YDBStorage) Init() error {
 
 func (s *YDBStorage) createAccountTable() error {
 	query :=
-		`CREATE TABLE IF NOT EXISTS account (
-            account_id Uuid,
+		`CREATE TABLE account (
+            account_id String,
             name String,
             email String,
             password String,
             PRIMARY KEY (account_id)
         );`
 
-	_, err := s.db.Exec(query)
-	return err
-}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
 
-func (s *YDBStorage) CreateAccount(*data.AccountRequest) error {
+	_, execErr := tx.Exec(query)
+	if execErr != nil {
+		_ = tx.Rollback()
+		return execErr
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	return nil
 }
+
+func (s *YDBStorage) CreateAccount(account *data.Account) error {
+	query :=
+		`REPLACE INTO account (account_id, name, email, password) VALUES
+            (?, ?, ?, ?);
+        `
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// TODO: Hash the password
+	_, execErr := tx.Exec(query, account.ID, account.Name, account.Email, account.Password)
+	if execErr != nil {
+		_ = tx.Rollback()
+		return execErr
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *YDBStorage) GetAccount(email, password string) (*data.Account, error) {
 	return nil, nil
 }
+
 func (s *YDBStorage) UpdateAccount(email, password string) (*data.Account, error) {
 	return nil, nil
 }
+
 func (s *YDBStorage) DeleteAccount(email, password string) error {
 	return nil
 }
