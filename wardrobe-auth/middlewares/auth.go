@@ -23,7 +23,7 @@ func ValidateAccountCredentials(
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), contextKeyAccountRequest, request)
+		ctx := context.WithValue(r.Context(), contextKeyAccountRequest, &request)
 		next(w, r.WithContext(ctx), ps)
 	}
 }
@@ -47,6 +47,37 @@ func SingUp(
 			return
 		}
 
+		// TODO:
+		// 1. Generate JWT
+		// 2. Add JWT to JWT db
+		// 3. Add JWT to context
+
+		next(w, r, ps)
+	}
+}
+
+func SingIn(
+	next httprouter.Handle,
+	s database.Storage,
+) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		_, err := GetAccountRequestKey(r.Context())
+		if err != nil {
+			log.Printf("An error occure at SingIn: %v.", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		log.Println("success")
+		next(w, r, ps)
+	}
+}
+
+func Refresh(
+	next httprouter.Handle,
+	s database.Storage,
+) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		next(w, r, ps)
 	}
 }
