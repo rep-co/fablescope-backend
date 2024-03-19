@@ -47,15 +47,15 @@ func (s *YDBStorage) createAccountTable() error {
 	return err
 }
 
-func (s *YDBStorage) CreateAccount(*data.AccountCredentials) error {
+func (s *YDBStorage) CreateAccount(*data.AccountRequest) error {
 	return nil
 }
-func (s *YDBStorage) GetAccount(*data.AccountCredentials) (*data.Account, error) {
+func (s *YDBStorage) GetAccount(*data.AccountRequest) (*data.Account, error) {
 	return nil, nil
 }
-func (s *YDBStorage) UpdateAccount(*data.AccountCredentials) (*data.Account, error) {
+func (s *YDBStorage) UpdateAccount(*data.AccountRequest) (*data.Account, error) {
 	return nil, nil
 }
-func (s *YDBStorage) DeleteAccount(*data.AccountCredentials) error {
+func (s *YDBStorage) DeleteAccount(*data.AccountRequest) error {
 	return nil
 }
