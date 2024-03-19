@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/database"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/handlers"
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/middlewares"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/util"
 )
 
@@ -16,9 +18,27 @@ func main() {
 
 	port := os.Getenv("PORT")
 
+	storage, err := database.NewYDBStorage()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	//if err := storage.Init(); err != nil {
+	//	log.Fatal(err)
+	//	return
+	//}
+
 	router := httprouter.New()
 
-	router.POST("/sing-up", handlers.HandleSingUp)
+	router.POST(
+		"/sing-up",
+		middlewares.ValidateAccountCredentials(
+			middlewares.SingUp(
+				handlers.HandleSingUp,
+				storage,
+			),
+		),
+	)
 	router.POST("/sing-in", handlers.HandleSingIn)
 	router.POST("/refresh", handlers.HandleRefresh)
 
