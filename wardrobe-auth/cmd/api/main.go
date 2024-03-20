@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +14,7 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
 	// TODO: use separate .env
 	util.LoadEnv()
 
@@ -23,17 +25,21 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	//if err := storage.Init(); err != nil {
-	//	log.Fatal(err)
-	//	return
-	//}
+	defer storage.Close(ctx)
+
+	if err := storage.Init(ctx); err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	router := httprouter.New()
 
 	router.POST(
 		"/sing-up",
 		middlewares.ValidateAccountCredentials(
+			ctx,
 			middlewares.SingUp(
+				ctx,
 				handlers.HandleSingUp,
 				storage,
 			),
