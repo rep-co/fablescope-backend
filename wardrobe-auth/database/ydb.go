@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"log"
 	"path"
 
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
@@ -10,11 +9,15 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/table"
 	"github.com/ydb-platform/ydb-go-sdk/v3/table/options"
 	"github.com/ydb-platform/ydb-go-sdk/v3/table/types"
+	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	cost int = bcrypt.DefaultCost // 10
 )
 
 type YDBStorage struct {
-	db     *ydb.Driver
-	hasher any
+	db *ydb.Driver
 }
 
 func NewYDBStorage() (*YDBStorage, error) {
@@ -72,8 +75,10 @@ func (s *YDBStorage) CreateAccount(ctx context.Context, account *data.Account) e
         VALUES ($account_id, $name, $email, $password);
     `
 
-	// TODO: Do hashing
-	hashedPassword := account.Password
+	hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(account.Password), cost)
+	if hashErr != nil {
+		return hashErr
+	}
 
 	err := s.db.Table().DoTx(ctx,
 		func(ctx context.Context, tx table.TransactionActor) error {
