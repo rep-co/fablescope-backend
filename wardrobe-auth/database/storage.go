@@ -1,10 +1,32 @@
 package database
 
-import "github.com/rep-co/fablescope-backend/wardrobe-auth/data"
+import (
+	"context"
+
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
+)
 
 type Storage interface {
-	CreateAccount(*data.Account) error
-	GetAccount(email, password string) (*data.Account, error)
-	UpdateAccount(email, password string) (*data.Account, error)
-	DeleteAccount(email, password string) error
+	CreateAccount(
+		ctx context.Context,
+		account *data.Account,
+	) error
+
+	GetAccount(
+		ctx context.Context,
+		email,
+		password string,
+	) (*data.Account, error)
+
+	UpdateAccount(
+		ctx context.Context,
+		email,
+		password string,
+	) (*data.Account, error)
+
+	DeleteAccount(
+		ctx context.Context,
+		email,
+		password string,
+	) error
 }
