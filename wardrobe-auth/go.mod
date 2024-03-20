@@ -15,6 +15,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20240316140903-4a47abca1cca // indirect
+	golang.org/x/crypto v0.21.0
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
