@@ -12,6 +12,7 @@ import (
 )
 
 func ValidateAccountCredentials(
+	ctx context.Context,
 	next httprouter.Handle,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
@@ -29,6 +30,7 @@ func ValidateAccountCredentials(
 }
 
 func SingUp(
+	ctx context.Context,
 	next httprouter.Handle,
 	s database.Storage,
 ) httprouter.Handle {
@@ -41,7 +43,7 @@ func SingUp(
 		}
 
 		account := data.NewAccount(request)
-		if err := s.CreateAccount(account); err != nil {
+		if err := s.CreateAccount(ctx, account); err != nil {
 			log.Printf("An error occure at SingUp: %v.", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -57,6 +59,7 @@ func SingUp(
 }
 
 func SingIn(
+	ctx context.Context,
 	next httprouter.Handle,
 	s database.Storage,
 ) httprouter.Handle {
@@ -74,6 +77,7 @@ func SingIn(
 }
 
 func Refresh(
+	ctx context.Context,
 	next httprouter.Handle,
 	s database.Storage,
 ) httprouter.Handle {
