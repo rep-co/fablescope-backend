@@ -20,7 +20,7 @@ type YDBStorage struct {
 func NewYDBStorage() (*YDBStorage, error) {
 	ctx := context.TODO()
 	dsn := "grpcs://ydb.serverless.yandexcloud.net:2135/?database=/ru-central1/b1gih93q5tulltkd8r47/etnav8lc4tnqftk3fu2m"
-	token := "t1.9euelZqYyJCQyprOxs-Tz5rMm5SLi-3rnpWaiZCLzM-eipuXkZvPy5mOx5Hl8_ckURhQ-e8oNkRN_N3z92R_FVD57yg2RE38zef1656Vms2WkpOPxs2ej8-PzJqYyp6e7_zF656Vms2WkpOPxs2ej8-PzJqYyp6e.1O-WywPerb4lV0m2stWyFp23nElbqbHnUMtTRbILTyw9-sqQIYThl5I_DuqTZcD8OzMKC-TsNPCYjNeBHM8jCA"
+	token := "t1.9euelZqZnorOnJ2ayJiOnImKz8_Pj-3rnpWaiZCLzM-eipuXkZvPy5mOx5Hl8_cbGBNQ-e8vEDBB_N3z91tGEFD57y8QMEH8zef1656VmpjPmZaWjpGdipjInZiJxs-W7_zF656VmpjPmZaWjpGdipjInZiJxs-W.LEnGtHihEVBn2AJhHO6EteS64calsFtG668fvFFzuMoOAR6GlNqbMFg3JJC_iSO-Ce-MtdNKehfxQ4GjiJKoDQ"
 
 	db, err := ydb.Open(ctx, dsn, ydb.WithAccessTokenCredentials(token))
 	if err != nil {
@@ -74,8 +74,6 @@ func (s *YDBStorage) CreateAccount(ctx context.Context, account *data.Account) e
 
 	// TODO: Do hashing
 	hashedPassword := account.Password
-
-	log.Printf("%v", account)
 
 	err := s.db.Table().DoTx(ctx,
 		func(ctx context.Context, tx table.TransactionActor) error {
