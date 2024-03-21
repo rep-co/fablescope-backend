@@ -9,11 +9,6 @@ import (
 	"github.com/ydb-platform/ydb-go-sdk/v3/table"
 	"github.com/ydb-platform/ydb-go-sdk/v3/table/options"
 	"github.com/ydb-platform/ydb-go-sdk/v3/table/types"
-	"golang.org/x/crypto/bcrypt"
-)
-
-const (
-	cost int = bcrypt.DefaultCost // 10
 )
 
 type YDBStorage struct {
@@ -65,7 +60,10 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 	return nil
 }
 
-func (s *YDBStorage) CreateAccount(ctx context.Context, account *data.Account) error {
+func (s *YDBStorage) CreateAccount(
+	ctx context.Context,
+	account *data.Account,
+) error {
 	query := `
         DECLARE $account_id AS String;
         DECLARE $name AS String;
@@ -75,11 +73,6 @@ func (s *YDBStorage) CreateAccount(ctx context.Context, account *data.Account) e
         VALUES ($account_id, $name, $email, $password);
     `
 
-	hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(account.Password), cost)
-	if hashErr != nil {
-		return hashErr
-	}
-
 	err := s.db.Table().DoTx(ctx,
 		func(ctx context.Context, tx table.TransactionActor) error {
 			res, err := tx.Execute(ctx,
@@ -88,7 +81,7 @@ func (s *YDBStorage) CreateAccount(ctx context.Context, account *data.Account) e
 					table.ValueParam("$account_id", types.BytesValue(account.ID[:])),
 					table.ValueParam("$name", types.BytesValue([]byte(account.Name))),
 					table.ValueParam("$email", types.BytesValue([]byte(account.Email))),
-					table.ValueParam("$password", types.BytesValue([]byte(hashedPassword))),
+					table.ValueParam("$password", types.BytesValue([]byte(account.Password))),
 				),
 			)
 			if err != nil {
@@ -112,6 +105,14 @@ func (s *YDBStorage) GetAccount(
 	email,
 	password string,
 ) (*data.Account, error) {
+	_ = `
+        DECLARE $email AS String;
+        DECLARE $password AS String;
+        SELECT account_id, name, email, password
+        FROM account
+        WHERE email = $email AND
+        password = $password;
+    `
 	return nil, nil
 }
 
