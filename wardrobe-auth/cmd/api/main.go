@@ -19,8 +19,12 @@ func main() {
 	util.LoadEnv()
 
 	port := os.Getenv("PORT")
+	ydbConnString := os.Getenv("YDB_CONN_STRING")
 
-	storage, err := database.NewYDBStorage()
+	// TODO: get token by api call, will do it later
+	token := os.Getenv("TOKEN")
+
+	storage, err := database.NewYDBStorage(ctx, ydbConnString, token)
 	if err != nil {
 		log.Fatal(err)
 		return
