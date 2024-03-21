@@ -20,12 +20,12 @@ type YDBStorage struct {
 	db *ydb.Driver
 }
 
-func NewYDBStorage() (*YDBStorage, error) {
-	ctx := context.TODO()
-	dsn := "grpcs://ydb.serverless.yandexcloud.net:2135/?database=/ru-central1/b1gih93q5tulltkd8r47/etnav8lc4tnqftk3fu2m"
-	token := "t1.9euelZqZnorOnJ2ayJiOnImKz8_Pj-3rnpWaiZCLzM-eipuXkZvPy5mOx5Hl8_cbGBNQ-e8vEDBB_N3z91tGEFD57y8QMEH8zef1656VmpjPmZaWjpGdipjInZiJxs-W7_zF656VmpjPmZaWjpGdipjInZiJxs-W.LEnGtHihEVBn2AJhHO6EteS64calsFtG668fvFFzuMoOAR6GlNqbMFg3JJC_iSO-Ce-MtdNKehfxQ4GjiJKoDQ"
+func NewYDBStorage(
+	ctx context.Context,
+	connString, token string,
+) (*YDBStorage, error) {
 
-	db, err := ydb.Open(ctx, dsn, ydb.WithAccessTokenCredentials(token))
+	db, err := ydb.Open(ctx, connString, ydb.WithAccessTokenCredentials(token))
 	if err != nil {
 		return nil, err
 	}
