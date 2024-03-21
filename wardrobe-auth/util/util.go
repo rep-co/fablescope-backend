@@ -17,10 +17,10 @@ func LoadEnv() {
 	currentWorkDirectory, _ := os.Getwd()
 	rootPath := projectName.Find([]byte(currentWorkDirectory))
 
-	err := godotenv.Load(string(rootPath) + `/.env`)
+	err := godotenv.Load(string(rootPath) + `/.env.auth`)
 
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatalf("Error loading .env.auth file")
 	}
 }
 
