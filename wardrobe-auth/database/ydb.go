@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"path"
 
 	"github.com/google/uuid"
@@ -150,18 +149,15 @@ func (s *YDBStorage) GetAccount(
 					if err != nil {
 						return err
 					}
+				} else {
+					return &NoResultError
 				}
 			}
-
 			return res.Err()
 		},
 	)
 	if err != nil {
 		return nil, err
-	}
-
-	if account.ID == uuid.Nil {
-		return nil, fmt.Errorf("something went wrong, uuid is nil")
 	}
 
 	return &account, nil
