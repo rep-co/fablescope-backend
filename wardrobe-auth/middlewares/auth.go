@@ -74,10 +74,28 @@ func SingIn(
 	s database.Storage,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		_, err := GetAccountRequestKey(r.Context())
+		request, err := GetAccountRequestKey(r.Context())
 		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		// TODO: Mb it's a good idea to create some sort of a service
+		// and then refactor this, moving into it's dedicated service
+		account, err := s.GetAccount(ctx, request.Email)
+		if err != nil {
+			log.Printf("An error occure at SingIn: %v.", err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		if err = bcrypt.CompareHashAndPassword(
+			[]byte(account.Password),
+			[]byte(request.Password),
+		); err != nil {
+			log.Printf("An error occure at SingIn: %v.", err)
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
 
@@ -85,7 +103,6 @@ func SingIn(
 		// 1. Generate JWT
 		// 2. Add JWT to JWT db
 		// 3. Add JWT to context
-		log.Println("success")
 		next(w, r, ps)
 	}
 }
