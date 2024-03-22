@@ -10,7 +10,7 @@ import (
 
 func HandleSingUp(
 	w http.ResponseWriter,
-	r *http.Request,
+	_ *http.Request,
 	_ httprouter.Params,
 ) {
 	util.WriteJSON(w, http.StatusOK, "success")
@@ -18,10 +18,11 @@ func HandleSingUp(
 
 func HandleSingIn(
 	w http.ResponseWriter,
-	r *http.Request,
+	_ *http.Request,
 	_ httprouter.Params,
 ) {
 
+	util.WriteJSON(w, http.StatusOK, "success")
 }
 
 func HandleRefresh(
