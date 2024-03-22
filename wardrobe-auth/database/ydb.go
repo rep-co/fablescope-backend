@@ -2,12 +2,15 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"path"
 
+	"github.com/google/uuid"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 	"github.com/ydb-platform/ydb-go-sdk/v3"
 	"github.com/ydb-platform/ydb-go-sdk/v3/table"
 	"github.com/ydb-platform/ydb-go-sdk/v3/table/options"
+	"github.com/ydb-platform/ydb-go-sdk/v3/table/result/named"
 	"github.com/ydb-platform/ydb-go-sdk/v3/table/types"
 )
 
@@ -60,6 +63,7 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 	return nil
 }
 
+// TODO: Fix logging, it returns nothing for some reason
 func (s *YDBStorage) CreateAccount(
 	ctx context.Context,
 	account *data.Account,
@@ -78,7 +82,7 @@ func (s *YDBStorage) CreateAccount(
 			res, err := tx.Execute(ctx,
 				query,
 				table.NewQueryParameters(
-					table.ValueParam("$account_id", types.BytesValue(account.ID[:])),
+					table.ValueParam("$account_id", types.BytesValue([]byte(account.ID.String()))),
 					table.ValueParam("$name", types.BytesValue([]byte(account.Name))),
 					table.ValueParam("$email", types.BytesValue([]byte(account.Email))),
 					table.ValueParam("$password", types.BytesValue([]byte(account.Password))),
@@ -100,20 +104,67 @@ func (s *YDBStorage) CreateAccount(
 	return nil
 }
 
+// TODO: Fix logging, it returns nothing for some reason
 func (s *YDBStorage) GetAccount(
 	ctx context.Context,
-	email,
-	password string,
+	email string,
 ) (*data.Account, error) {
-	_ = `
+	query := `
         DECLARE $email AS String;
         DECLARE $password AS String;
         SELECT account_id, name, email, password
         FROM account
-        WHERE email = $email AND
-        password = $password;
+        WHERE email = $email;
     `
-	return nil, nil
+	var account data.Account
+
+	err := s.db.Table().DoTx(ctx,
+		func(ctx context.Context, tx table.TransactionActor) error {
+			res, err := tx.Execute(ctx,
+				query,
+				table.NewQueryParameters(
+					table.ValueParam("$email", types.BytesValue([]byte(email))),
+				),
+			)
+			if err != nil {
+				return err
+			}
+
+			defer res.Close()
+
+			if res.NextResultSet(ctx) {
+				if res.NextRow() {
+					var passwordHashString []byte
+
+					err = res.ScanNamed(
+						named.Required("account_id", &passwordHashString),
+						named.Required("name", &account.Name),
+						named.Required("email", &account.Email),
+						named.Required("password", &account.Password),
+					)
+					if err != nil {
+						return err
+					}
+
+					account.ID, err = uuid.ParseBytes(passwordHashString)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			return res.Err()
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if account.ID == uuid.Nil {
+		return nil, fmt.Errorf("something went wrong, uuid is nil")
+	}
+
+	return &account, nil
 }
 
 func (s *YDBStorage) UpdateAccount(
