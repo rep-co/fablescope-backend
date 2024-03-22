@@ -14,8 +14,7 @@ type Storage interface {
 
 	GetAccount(
 		ctx context.Context,
-		email,
-		password string,
+		email string,
 	) (*data.Account, error)
 
 	UpdateAccount(
