@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 
@@ -84,6 +85,11 @@ func SingIn(
 		// TODO: Mb it's a good idea to create some sort of a service
 		// and then refactor this, moving into it's dedicated service
 		account, err := s.GetAccount(ctx, request.Email)
+		if errors.Is(err, &database.NoResultError) {
+			log.Printf("An error occure at SingIn: %v.", err)
+			http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
+			return
+		}
 		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -95,7 +101,7 @@ func SingIn(
 			[]byte(request.Password),
 		); err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
 			return
 		}
 
