@@ -49,7 +49,17 @@ func main() {
 			),
 		),
 	)
-	router.POST("/sing-in", handlers.HandleSingIn)
+	router.POST(
+		"/sing-in",
+		middlewares.ValidateAccountCredentials(
+			ctx,
+			middlewares.SingIn(
+				ctx,
+				handlers.HandleSingIn,
+				storage,
+			),
+		),
+	)
 	router.POST("/refresh", handlers.HandleRefresh)
 
 	log.Printf("JSON API server is listening on port: %s", port)
