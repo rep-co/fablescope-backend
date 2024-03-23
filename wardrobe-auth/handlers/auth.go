@@ -13,11 +13,7 @@ func HandleSingUp(
 	_ *http.Request,
 	_ httprouter.Params,
 ) {
-	err := util.WriteJSON(w, http.StatusOK, "AMOGUS Sing Up")
-	if err != nil {
-		log.Printf("An error occure at HandleGetCategory: %v.", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	}
+	util.WriteJSON(w, http.StatusOK, "success")
 }
 
 func HandleSingIn(
@@ -25,11 +21,8 @@ func HandleSingIn(
 	_ *http.Request,
 	_ httprouter.Params,
 ) {
-	err := util.WriteJSON(w, http.StatusOK, "AMOGUS Sing In")
-	if err != nil {
-		log.Printf("An error occure at HandleGetCategory: %v.", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-	}
+
+	util.WriteJSON(w, http.StatusOK, "success")
 }
 
 func HandleRefresh(
