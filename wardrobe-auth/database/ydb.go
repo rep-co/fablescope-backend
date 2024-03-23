@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"path"
 
 	"github.com/google/uuid"
@@ -62,7 +63,8 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 	return nil
 }
 
-// TODO: Fix logging, it returns nothing for some reason
+// TODO: cover this with human readable errors
+// TODO: add context with deadline. Without it DoTx could run indefenetly
 func (s *YDBStorage) CreateAccount(
 	ctx context.Context,
 	account *data.Account,
@@ -97,13 +99,14 @@ func (s *YDBStorage) CreateAccount(
 		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return err
+		return errors.Join(err, &TransactionError)
 	}
 
 	return nil
 }
 
-// TODO: Fix logging, it returns nothing for some reason
+// TODO: cover this with human readable errors
+// TODO: add context with deadline. Without it DoTx could run indefenetly
 func (s *YDBStorage) GetAccount(
 	ctx context.Context,
 	email string,
@@ -153,11 +156,14 @@ func (s *YDBStorage) GetAccount(
 					return &NoResultError
 				}
 			}
-			return res.Err()
-		},
+			if err = res.Err(); err != nil {
+				return err
+			}
+			return res.Close()
+		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, &TransactionError)
 	}
 
 	return &account, nil
