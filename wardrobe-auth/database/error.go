@@ -13,5 +13,5 @@ type storageError struct {
 }
 
 func (e *storageError) Error() string {
-	return fmt.Sprintf("Storage error: %s", e.Message)
+	return fmt.Sprintf("storage error: %s", e.Message)
 }
