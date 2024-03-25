@@ -94,7 +94,7 @@ func (s *YDBStorage) CreateAccount(
 				),
 			)
 			if err != nil {
-				return fmt.Errorf("account: transaction couldn't open: %w", err)
+				return &TransactionError
 			}
 			defer res.Close()
 
@@ -106,7 +106,7 @@ func (s *YDBStorage) CreateAccount(
 		case ctx.Err() != nil:
 			return &RequestTimeoutError
 		default:
-			return &TransactionError
+			return err
 		}
 	}
 
@@ -136,11 +136,11 @@ func (s *YDBStorage) GetAccount(
 				),
 			)
 			if err != nil {
-				return fmt.Errorf("account: transaction couldn't open: %w", err)
+				return &TransactionError
 			}
 			defer res.Close()
 
-			if err = res.NextResultSetErr(ctx); err != nil {
+			if res.NextResultSet(ctx); res.CurrentResultSet().RowCount() == 0 {
 				return &NoResultError
 			}
 
@@ -154,11 +154,11 @@ func (s *YDBStorage) GetAccount(
 				if err != nil {
 					return fmt.Errorf("account: count not scan account: %w", err)
 				}
-			}
 
-			account.ID, err = uuid.ParseBytes(passwordHashString)
-			if err != nil {
-				return fmt.Errorf("account: id is not a uuid format: %w", err)
+				account.ID, err = uuid.ParseBytes(passwordHashString)
+				if err != nil {
+					return fmt.Errorf("account: id is not a uuid format: %w", err)
+				}
 			}
 
 			return res.Err()
@@ -169,7 +169,7 @@ func (s *YDBStorage) GetAccount(
 		case ctx.Err() != nil:
 			return nil, &RequestTimeoutError
 		default:
-			return nil, &TransactionError
+			return nil, err
 		}
 	}
 
