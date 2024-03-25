@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"fmt"
 	"path"
 
 	"github.com/google/uuid"
@@ -90,16 +91,15 @@ func (s *YDBStorage) CreateAccount(
 				),
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("account: transaction couldn't open: %w", err)
 			}
-			if err = res.Err(); err != nil {
-				return err
-			}
-			return res.Close()
+			defer res.Close()
+
+			return res.Err()
 		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return errors.Join(err, &TransactionError)
+		return &TransactionError
 	}
 
 	return nil
@@ -119,6 +119,7 @@ func (s *YDBStorage) GetAccount(
         WHERE email = $email;
     `
 	var account data.Account
+	var passwordHashString []byte
 
 	err := s.db.Table().DoTx(ctx,
 		func(ctx context.Context, tx table.TransactionActor) error {
@@ -129,41 +130,35 @@ func (s *YDBStorage) GetAccount(
 				),
 			)
 			if err != nil {
-				return err
+				return fmt.Errorf("account: transaction couldn't open: %w", err)
 			}
-
 			defer res.Close()
 
-			if res.NextResultSet(ctx) {
-				if res.NextRow() {
-					var passwordHashString []byte
+			if err = res.NextResultSetErr(ctx); err != nil {
+				return &NoResultError
+			}
 
-					err = res.ScanNamed(
-						named.Required("account_id", &passwordHashString),
-						named.Required("name", &account.Name),
-						named.Required("email", &account.Email),
-						named.Required("password", &account.Password),
-					)
-					if err != nil {
-						return err
-					}
-
-					account.ID, err = uuid.ParseBytes(passwordHashString)
-					if err != nil {
-						return err
-					}
-				} else {
-					return &NoResultError
+			for res.NextRow() {
+				err = res.ScanNamed(
+					named.Required("account_id", &passwordHashString),
+					named.Required("name", &account.Name),
+					named.Required("email", &account.Email),
+					named.Required("password", &account.Password),
+				)
+				if err != nil {
+					return fmt.Errorf("account: count not scan account: %w", err)
 				}
 			}
-			if err = res.Err(); err != nil {
-				return err
-			}
-			return res.Close()
+			return res.Err()
 		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return nil, errors.Join(err, &TransactionError)
+		return nil, &TransactionError
+	}
+
+	account.ID, err = uuid.ParseBytes(passwordHashString)
+	if err != nil {
+		return nil, fmt.Errorf("account: id is not a uuid format: %w", err)
 	}
 
 	return &account, nil
