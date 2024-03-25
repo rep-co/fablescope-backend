@@ -3,7 +3,6 @@ package database
 import "fmt"
 
 var (
-	ExecutionError   = storageError{Message: "YQL execution error"}
 	NoResultError    = storageError{Message: "no result error. Record doesn't exist"}
 	TransactionError = storageError{Message: "transaction error. Transaction rolled back"}
 )
