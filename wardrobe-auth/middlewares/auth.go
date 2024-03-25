@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
@@ -14,7 +15,8 @@ import (
 )
 
 const (
-	cost int = bcrypt.DefaultCost // 10
+	passwordHashingCost = bcrypt.DefaultCost // 10
+	ydbRequestTTL       = time.Second * 5
 )
 
 func ValidateAccountCredentials(
@@ -48,10 +50,16 @@ func SingUp(
 			return
 		}
 
+		ctx, cancel := context.WithDeadline(ctx, time.Now().Add(ydbRequestTTL))
+		defer cancel()
+
 		// TODO: Mb it's a good idea to create some sort of a service
 		// and then refactor this, moving into it's dedicated service
 		account := data.NewAccount(request)
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(account.Password), cost)
+		hashedPassword, err := bcrypt.GenerateFromPassword(
+			[]byte(account.Password),
+			passwordHashingCost,
+		)
 		if err != nil {
 			log.Printf("An error occure at SingUp: %v.", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -61,7 +69,12 @@ func SingUp(
 
 		if err := s.CreateAccount(ctx, account); err != nil {
 			log.Printf("An error occure at SingUp: %v.", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			switch {
+			case errors.Is(err, &database.RequestTimeoutError):
+				http.Error(w, http.StatusText(http.StatusGatewayTimeout), http.StatusGatewayTimeout)
+			default:
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -82,16 +95,19 @@ func SingIn(
 			return
 		}
 
+		ctx, cancel := context.WithDeadline(ctx, time.Now().Add(ydbRequestTTL))
+		defer cancel()
+
 		// TODO: Mb it's a good idea to create some sort of a service
 		// and then refactor this, moving into it's dedicated service
 		account, err := s.GetAccount(ctx, request.Email)
 		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
 			switch {
-
+			case errors.Is(err, &database.RequestTimeoutError):
+				http.Error(w, http.StatusText(http.StatusGatewayTimeout), http.StatusGatewayTimeout)
 			case errors.Is(err, &database.NoResultError):
 				http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
-
 			default:
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
