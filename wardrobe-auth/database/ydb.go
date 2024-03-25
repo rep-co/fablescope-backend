@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"path"
 
@@ -48,24 +47,29 @@ func (s *YDBStorage) Close(ctx context.Context) error {
 func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 	err := s.db.Table().Do(ctx,
 		func(ctx context.Context, session table.Session) (err error) {
-			return session.CreateTable(ctx, path.Join(s.db.Name(), "account"),
+			err = session.CreateTable(ctx, path.Join(s.db.Name(), "account"),
 				options.WithColumn("account_id", types.TypeString),
 				options.WithColumn("name", types.TypeString),
 				options.WithColumn("email", types.TypeString),
 				options.WithColumn("password", types.TypeString),
 				options.WithPrimaryKeyColumn("account_id"),
 			)
+
+			return fmt.Errorf("create account: table can't be created: %w", err)
 		},
 	)
 	if err != nil {
-		return err
+		switch {
+		case ctx.Err() != nil:
+			return fmt.Errorf("request timeout: %w", ctx.Err())
+		default:
+			return &ExecutionError
+		}
 	}
 
 	return nil
 }
 
-// TODO: cover this with human readable errors
-// TODO: add context with deadline. Without it DoTx could run indefenetly
 func (s *YDBStorage) CreateAccount(
 	ctx context.Context,
 	account *data.Account,
@@ -99,14 +103,17 @@ func (s *YDBStorage) CreateAccount(
 		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return &TransactionError
+		switch {
+		case ctx.Err() != nil:
+			return fmt.Errorf("request timeout: %w", ctx.Err())
+		default:
+			return &TransactionError
+		}
 	}
 
 	return nil
 }
 
-// TODO: cover this with human readable errors
-// TODO: add context with deadline. Without it DoTx could run indefenetly
 func (s *YDBStorage) GetAccount(
 	ctx context.Context,
 	email string,
@@ -149,16 +156,22 @@ func (s *YDBStorage) GetAccount(
 					return fmt.Errorf("account: count not scan account: %w", err)
 				}
 			}
+
+			account.ID, err = uuid.ParseBytes(passwordHashString)
+			if err != nil {
+				return fmt.Errorf("account: id is not a uuid format: %w", err)
+			}
+
 			return res.Err()
 		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return nil, &TransactionError
-	}
-
-	account.ID, err = uuid.ParseBytes(passwordHashString)
-	if err != nil {
-		return nil, fmt.Errorf("account: id is not a uuid format: %w", err)
+		switch {
+		case ctx.Err() != nil:
+			return nil, fmt.Errorf("request timeout: %w", ctx.Err())
+		default:
+			return nil, &TransactionError
+		}
 	}
 
 	return &account, nil
