@@ -47,15 +47,13 @@ func (s *YDBStorage) Close(ctx context.Context) error {
 func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 	err := s.db.Table().Do(ctx,
 		func(ctx context.Context, session table.Session) (err error) {
-			err = session.CreateTable(ctx, path.Join(s.db.Name(), "account"),
+			return session.CreateTable(ctx, path.Join(s.db.Name(), "account"),
 				options.WithColumn("account_id", types.TypeString),
 				options.WithColumn("name", types.TypeString),
 				options.WithColumn("email", types.TypeString),
 				options.WithColumn("password", types.TypeString),
 				options.WithPrimaryKeyColumn("account_id"),
 			)
-
-			return fmt.Errorf("create account: table can't be created: %w", err)
 		},
 	)
 	if err != nil {
@@ -63,6 +61,7 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 		case ctx.Err() != nil:
 			return &RequestTimeoutError
 		default:
+			fmt.Println(err)
 			return &ExecutionError
 		}
 	}
