@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"path"
 
 	"github.com/google/uuid"
@@ -56,13 +57,18 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 		},
 	)
 	if err != nil {
-		return err
+		switch {
+		case ctx.Err() != nil:
+			return &RequestTimeoutError
+		default:
+			fmt.Println(err)
+			return &ExecutionError
+		}
 	}
 
 	return nil
 }
 
-// TODO: Fix logging, it returns nothing for some reason
 func (s *YDBStorage) CreateAccount(
 	ctx context.Context,
 	account *data.Account,
@@ -88,22 +94,25 @@ func (s *YDBStorage) CreateAccount(
 				),
 			)
 			if err != nil {
-				return err
+				return &TransactionError
 			}
-			if err = res.Err(); err != nil {
-				return err
-			}
-			return res.Close()
+			defer res.Close()
+
+			return res.Err()
 		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return err
+		switch {
+		case ctx.Err() != nil:
+			return &RequestTimeoutError
+		default:
+			return err
+		}
 	}
 
 	return nil
 }
 
-// TODO: Fix logging, it returns nothing for some reason
 func (s *YDBStorage) GetAccount(
 	ctx context.Context,
 	email string,
@@ -116,6 +125,7 @@ func (s *YDBStorage) GetAccount(
         WHERE email = $email;
     `
 	var account data.Account
+	var passwordHashString []byte
 
 	err := s.db.Table().DoTx(ctx,
 		func(ctx context.Context, tx table.TransactionActor) error {
@@ -126,38 +136,41 @@ func (s *YDBStorage) GetAccount(
 				),
 			)
 			if err != nil {
-				return err
+				return &TransactionError
 			}
-
 			defer res.Close()
 
-			if res.NextResultSet(ctx) {
-				if res.NextRow() {
-					var passwordHashString []byte
+			if res.NextResultSet(ctx); res.CurrentResultSet().RowCount() == 0 {
+				return &NoResultError
+			}
 
-					err = res.ScanNamed(
-						named.Required("account_id", &passwordHashString),
-						named.Required("name", &account.Name),
-						named.Required("email", &account.Email),
-						named.Required("password", &account.Password),
-					)
-					if err != nil {
-						return err
-					}
+			for res.NextRow() {
+				err = res.ScanNamed(
+					named.Required("account_id", &passwordHashString),
+					named.Required("name", &account.Name),
+					named.Required("email", &account.Email),
+					named.Required("password", &account.Password),
+				)
+				if err != nil {
+					return fmt.Errorf("account: count not scan account: %w", err)
+				}
 
-					account.ID, err = uuid.ParseBytes(passwordHashString)
-					if err != nil {
-						return err
-					}
-				} else {
-					return &NoResultError
+				account.ID, err = uuid.ParseBytes(passwordHashString)
+				if err != nil {
+					return fmt.Errorf("account: id is not a uuid format: %w", err)
 				}
 			}
+
 			return res.Err()
-		},
+		}, table.WithIdempotent(),
 	)
 	if err != nil {
-		return nil, err
+		switch {
+		case ctx.Err() != nil:
+			return nil, &RequestTimeoutError
+		default:
+			return nil, err
+		}
 	}
 
 	return &account, nil

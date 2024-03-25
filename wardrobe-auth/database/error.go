@@ -3,8 +3,10 @@ package database
 import "fmt"
 
 var (
-	ExecutionError = storageError{Message: "execution error"}
-	NoResultError  = storageError{Message: "no data were recived"}
+	NoResultError       = storageError{Message: "no result error. Record doesn't exist"}
+	TransactionError    = storageError{Message: "transaction error. Transaction rolled back"}
+	ExecutionError      = storageError{Message: "operation error. Operation can't be executed"}
+	RequestTimeoutError = storageError{Message: "request timeout"}
 )
 
 type storageError struct {
@@ -12,5 +14,5 @@ type storageError struct {
 }
 
 func (e *storageError) Error() string {
-	return fmt.Sprintf("Storage error: %s", e.Message)
+	return fmt.Sprintf("storage error: %s", e.Message)
 }
