@@ -61,7 +61,7 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 	if err != nil {
 		switch {
 		case ctx.Err() != nil:
-			return fmt.Errorf("request timeout: %w", ctx.Err())
+			return &RequestTimeoutError
 		default:
 			return &ExecutionError
 		}
@@ -105,7 +105,7 @@ func (s *YDBStorage) CreateAccount(
 	if err != nil {
 		switch {
 		case ctx.Err() != nil:
-			return fmt.Errorf("request timeout: %w", ctx.Err())
+			return &RequestTimeoutError
 		default:
 			return &TransactionError
 		}
@@ -168,7 +168,7 @@ func (s *YDBStorage) GetAccount(
 	if err != nil {
 		switch {
 		case ctx.Err() != nil:
-			return nil, fmt.Errorf("request timeout: %w", ctx.Err())
+			return nil, &RequestTimeoutError
 		default:
 			return nil, &TransactionError
 		}
