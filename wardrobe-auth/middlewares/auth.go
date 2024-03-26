@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/database"
@@ -17,6 +18,7 @@ import (
 const (
 	passwordHashingCost = bcrypt.DefaultCost // 10
 	ydbRequestTTL       = time.Second * 5
+	tokenTTL            = time.Minute * 15
 )
 
 func ValidateAccountCredentials(
@@ -32,8 +34,12 @@ func ValidateAccountCredentials(
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), contextKeyAccountRequest, &request)
-		next(w, r.WithContext(ctx), ps)
+		ctxRequestValue := context.WithValue(
+			r.Context(),
+			contextKeyAccountRequest,
+			&request,
+		)
+		next(w, r.WithContext(ctxRequestValue), ps)
 	}
 }
 
@@ -50,7 +56,10 @@ func SingUp(
 			return
 		}
 
-		ctx, cancel := context.WithDeadline(ctx, time.Now().Add(ydbRequestTTL))
+		ctxTxDeadline, cancel := context.WithDeadline(
+			ctx,
+			time.Now().Add(ydbRequestTTL),
+		)
 		defer cancel()
 
 		// TODO: Mb it's a good idea to create some sort of a service
@@ -67,7 +76,7 @@ func SingUp(
 		}
 		account.Password = string(hashedPassword)
 
-		if err := s.CreateAccount(ctx, account); err != nil {
+		if err := s.CreateAccount(ctxTxDeadline, account); err != nil {
 			log.Printf("An error occure at SingUp: %v.", err)
 			switch {
 			case errors.Is(err, &database.RequestTimeoutError):
@@ -95,12 +104,15 @@ func SingIn(
 			return
 		}
 
-		ctx, cancel := context.WithDeadline(ctx, time.Now().Add(ydbRequestTTL))
+		ctxTxDeadline, cancel := context.WithDeadline(
+			ctx,
+			time.Now().Add(ydbRequestTTL),
+		)
 		defer cancel()
 
 		// TODO: Mb it's a good idea to create some sort of a service
 		// and then refactor this, moving into it's dedicated service
-		account, err := s.GetAccount(ctx, request.Email)
+		account, err := s.GetAccount(ctxTxDeadline, request.Email)
 		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
 			switch {
@@ -123,11 +135,27 @@ func SingIn(
 			return
 		}
 
-		// TODO:
-		// 1. Generate JWT
-		// 2. Add JWT to JWT db
-		// 3. Add JWT to context
-		next(w, r, ps)
+		// TODO: JWT cooking should also be it's own service
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(tokenTTL)},
+			Subject:   account.ID.String(),
+		})
+		tokenStr, err := token.SignedString([]byte("amogus"))
+		if err != nil {
+			log.Printf("An error occure at SingIn: %v.", err)
+			return
+		}
+		refreshTokenStr := "" //Cook refresh token
+
+		ctxRequestValue := context.WithValue(
+			r.Context(),
+			contextKeyTokens,
+			&data.Tokens{
+				JWTToken:     tokenStr,
+				RefreshToken: refreshTokenStr,
+			},
+		)
+		next(w, r.WithContext(ctxRequestValue), ps)
 	}
 }
 
