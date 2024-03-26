@@ -14,8 +14,6 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
-	// TODO: use separate .env
 	util.LoadEnv()
 
 	port := os.Getenv("PORT")
@@ -23,6 +21,8 @@ func main() {
 
 	// TODO: get token by api call, will do it later
 	token := os.Getenv("TOKEN")
+
+	ctx := context.Background()
 
 	storage, err := database.NewYDBStorage(ctx, ydbConnString, token)
 	if err != nil {
