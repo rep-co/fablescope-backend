@@ -9,6 +9,7 @@ import (
 
 var (
 	contextKeyAccountRequest = contextKey("accountRequest")
+	contextKeyTokens         = contextKey("jwtToken")
 )
 
 type contextKey string
@@ -26,6 +27,18 @@ func GetAccountRequestKey(ctx context.Context) (*data.AccountRequest, error) {
 		return nil, err
 	}
 	err := &KeyWasNotFoundError{keyName: string(contextKeyAccountRequest)}
+	return nil, err
+}
+
+func GetTokensKey(ctx context.Context) (*data.Tokens, error) {
+	if v := ctx.Value(contextKeyTokens); v != nil {
+		if v, ok := v.(*data.Tokens); ok {
+			return v, nil
+		}
+		err := &KeyHasWrongTypeError{keyName: string(contextKeyTokens)}
+		return nil, err
+	}
+	err := &KeyWasNotFoundError{keyName: string(contextKeyTokens)}
 	return nil, err
 }
 
