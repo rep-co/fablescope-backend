@@ -77,7 +77,7 @@ func SingUp(
 func SingIn(
 	ctx context.Context,
 	next httprouter.Handle,
-	s database.AccountStorage,
+	accountService *services.AccountService,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		request, err := GetAccountRequestKey(r.Context())
@@ -87,34 +87,19 @@ func SingIn(
 			return
 		}
 
-		ctxTxDeadline, cancel := context.WithDeadline(
-			ctx,
-			time.Now().Add(ydbRequestTTL),
-		)
-		defer cancel()
-
-		// TODO: Mb it's a good idea to create some sort of a service
-		// and then refactor this, moving into it's dedicated service
-		account, err := s.GetAccount(ctxTxDeadline, request.Email)
+		account, err := accountService.AuthorizeAccount(ctx, request)
 		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
 			switch {
 			case errors.Is(err, &database.RequestTimeoutError):
 				http.Error(w, http.StatusText(http.StatusGatewayTimeout), http.StatusGatewayTimeout)
+			case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+				http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
 			case errors.Is(err, &database.NoResultError):
 				http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
 			default:
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
-			return
-		}
-
-		if err = bcrypt.CompareHashAndPassword(
-			[]byte(account.Password),
-			[]byte(request.Password),
-		); err != nil {
-			log.Printf("An error occure at SingIn: %v.", err)
-			http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
 			return
 		}
 
