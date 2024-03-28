@@ -8,6 +8,10 @@ type AccountRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type AccountResponse struct {
+	ID string `json:"account_id"`
+}
+
 type Account struct {
 	ID       uuid.UUID
 	Name     string
