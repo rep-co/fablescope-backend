@@ -6,7 +6,7 @@ import (
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 )
 
-type Storage interface {
+type AccountStorage interface {
 	CreateAccount(
 		ctx context.Context,
 		account *data.Account,

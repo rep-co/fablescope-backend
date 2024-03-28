@@ -10,12 +10,11 @@ import (
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/database"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/handlers"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/middlewares"
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/services"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/util"
 )
 
 func main() {
-	ctx := context.Background()
-	// TODO: use separate .env
 	util.LoadEnv()
 
 	port := os.Getenv("PORT")
@@ -24,17 +23,22 @@ func main() {
 	// TODO: get token by api call, will do it later
 	token := os.Getenv("TOKEN")
 
-	storage, err := database.NewYDBStorage(ctx, ydbConnString, token)
+	ctx := context.Background()
+
+	accountStorage, err := database.NewYDBStorage(ctx, ydbConnString, token)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
-	defer storage.Close(ctx)
+	defer accountStorage.Close(ctx)
 
-	if err := storage.Init(ctx); err != nil {
+	if err := accountStorage.Init(ctx); err != nil {
 		log.Fatal(err)
 		return
 	}
+
+	accountService := services.NewAccountService(accountStorage)
+	tokenService := services.NewTokenService([]byte("amogus"))
 
 	router := httprouter.New()
 
@@ -45,7 +49,7 @@ func main() {
 			middlewares.SingUp(
 				ctx,
 				handlers.HandleSingUp,
-				storage,
+				accountService,
 			),
 		),
 	)
@@ -56,7 +60,8 @@ func main() {
 			middlewares.SingIn(
 				ctx,
 				handlers.HandleSingIn,
-				storage,
+				accountService,
+				tokenService,
 			),
 		),
 	)

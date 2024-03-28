@@ -10,6 +10,8 @@ require (
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.58.2
 )
 
+require github.com/golang-jwt/jwt/v5 v5.2.1
+
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect

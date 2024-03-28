@@ -10,13 +10,14 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/database"
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/services"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/util"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-	passwordHashingCost = bcrypt.DefaultCost // 10
-	ydbRequestTTL       = time.Second * 5
+	ydbRequestTTL = time.Second * 5
+	tokenTTL      = time.Minute * 15
 )
 
 func ValidateAccountCredentials(
@@ -32,15 +33,19 @@ func ValidateAccountCredentials(
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), contextKeyAccountRequest, &request)
-		next(w, r.WithContext(ctx), ps)
+		ctxRequestValue := context.WithValue(
+			r.Context(),
+			contextKeyAccountRequest,
+			&request,
+		)
+		next(w, r.WithContext(ctxRequestValue), ps)
 	}
 }
 
 func SingUp(
 	ctx context.Context,
 	next httprouter.Handle,
-	s database.Storage,
+	accountService *services.AccountService,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		request, err := GetAccountRequestKey(r.Context())
@@ -50,42 +55,38 @@ func SingUp(
 			return
 		}
 
-		ctx, cancel := context.WithDeadline(ctx, time.Now().Add(ydbRequestTTL))
-		defer cancel()
-
-		// TODO: Mb it's a good idea to create some sort of a service
-		// and then refactor this, moving into it's dedicated service
-		account := data.NewAccount(request)
-		hashedPassword, err := bcrypt.GenerateFromPassword(
-			[]byte(account.Password),
-			passwordHashingCost,
-		)
+		idString, err := accountService.CreateNewAccount(ctx, request)
 		if err != nil {
-			log.Printf("An error occure at SingUp: %v.", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		account.Password = string(hashedPassword)
-
-		if err := s.CreateAccount(ctx, account); err != nil {
 			log.Printf("An error occure at SingUp: %v.", err)
 			switch {
 			case errors.Is(err, &database.RequestTimeoutError):
 				http.Error(w, http.StatusText(http.StatusGatewayTimeout), http.StatusGatewayTimeout)
+			case errors.Is(err, &database.TransactionError):
+				http.Error(w, "An account with the given email already exists", http.StatusConflict)
 			default:
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 			return
 		}
 
-		next(w, r, ps)
+		response := &data.AccountResponse{
+			ID: idString,
+		}
+
+		ctxRequestValue := context.WithValue(
+			r.Context(),
+			contextKeyAccountResponse,
+			response,
+		)
+		next(w, r.WithContext(ctxRequestValue), ps)
 	}
 }
 
 func SingIn(
 	ctx context.Context,
 	next httprouter.Handle,
-	s database.Storage,
+	accountService *services.AccountService,
+	tokenService *services.TokenService,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		request, err := GetAccountRequestKey(r.Context())
@@ -95,17 +96,14 @@ func SingIn(
 			return
 		}
 
-		ctx, cancel := context.WithDeadline(ctx, time.Now().Add(ydbRequestTTL))
-		defer cancel()
-
-		// TODO: Mb it's a good idea to create some sort of a service
-		// and then refactor this, moving into it's dedicated service
-		account, err := s.GetAccount(ctx, request.Email)
+		account, err := accountService.AuthorizeAccount(ctx, request)
 		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
 			switch {
 			case errors.Is(err, &database.RequestTimeoutError):
 				http.Error(w, http.StatusText(http.StatusGatewayTimeout), http.StatusGatewayTimeout)
+			case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+				http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
 			case errors.Is(err, &database.NoResultError):
 				http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
 			default:
@@ -114,27 +112,25 @@ func SingIn(
 			return
 		}
 
-		if err = bcrypt.CompareHashAndPassword(
-			[]byte(account.Password),
-			[]byte(request.Password),
-		); err != nil {
+		tokens, err := tokenService.IssueTokens(account)
+		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
-			http.Error(w, "Wrong Email or Password", http.StatusUnauthorized)
 			return
 		}
 
-		// TODO:
-		// 1. Generate JWT
-		// 2. Add JWT to JWT db
-		// 3. Add JWT to context
-		next(w, r, ps)
+		ctxRequestValue := context.WithValue(
+			r.Context(),
+			contextKeyTokens,
+			tokens,
+		)
+		next(w, r.WithContext(ctxRequestValue), ps)
 	}
 }
 
 func Refresh(
 	ctx context.Context,
 	next httprouter.Handle,
-	s database.Storage,
+	s database.AccountStorage,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		next(w, r, ps)

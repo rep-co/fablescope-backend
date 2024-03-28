@@ -52,7 +52,7 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 				options.WithColumn("name", types.TypeString),
 				options.WithColumn("email", types.TypeString),
 				options.WithColumn("password", types.TypeString),
-				options.WithPrimaryKeyColumn("account_id"),
+				options.WithPrimaryKeyColumn("email"),
 			)
 		},
 	)
@@ -61,7 +61,6 @@ func (s *YDBStorage) createAccountTable(ctx context.Context) error {
 		case ctx.Err() != nil:
 			return &RequestTimeoutError
 		default:
-			fmt.Println(err)
 			return &ExecutionError
 		}
 	}
@@ -78,7 +77,7 @@ func (s *YDBStorage) CreateAccount(
         DECLARE $name AS String;
         DECLARE $email AS String;
         DECLARE $password AS String;
-        UPSERT INTO account (account_id, name, email, password)
+        INSERT INTO account (account_id, name, email, password)
         VALUES ($account_id, $name, $email, $password);
     `
 
@@ -93,6 +92,7 @@ func (s *YDBStorage) CreateAccount(
 					table.ValueParam("$password", types.BytesValue([]byte(account.Password))),
 				),
 			)
+			// TODO: refactor this. Research more about transaction errros
 			if err != nil {
 				return &TransactionError
 			}

@@ -8,13 +8,27 @@ import (
 )
 
 var (
-	contextKeyAccountRequest = contextKey("accountRequest")
+	contextKeyAccountRequest  = contextKey("accountRequest")
+	contextKeyTokens          = contextKey("jwtToken")
+	contextKeyAccountResponse = contextKey("accountResponse")
 )
 
 type contextKey string
 
 func (c contextKey) String() string {
 	return "middlewares context key " + string(c)
+}
+
+func GetAccountResponseKey(ctx context.Context) (*data.AccountResponse, error) {
+	if v := ctx.Value(contextKeyAccountResponse); v != nil {
+		if v, ok := v.(*data.AccountResponse); ok {
+			return v, nil
+		}
+		err := &KeyHasWrongTypeError{keyName: string(contextKeyAccountResponse)}
+		return nil, err
+	}
+	err := &KeyWasNotFoundError{keyName: string(contextKeyAccountResponse)}
+	return nil, err
 }
 
 func GetAccountRequestKey(ctx context.Context) (*data.AccountRequest, error) {
@@ -26,6 +40,18 @@ func GetAccountRequestKey(ctx context.Context) (*data.AccountRequest, error) {
 		return nil, err
 	}
 	err := &KeyWasNotFoundError{keyName: string(contextKeyAccountRequest)}
+	return nil, err
+}
+
+func GetTokensKey(ctx context.Context) (*data.Tokens, error) {
+	if v := ctx.Value(contextKeyTokens); v != nil {
+		if v, ok := v.(*data.Tokens); ok {
+			return v, nil
+		}
+		err := &KeyHasWrongTypeError{keyName: string(contextKeyTokens)}
+		return nil, err
+	}
+	err := &KeyWasNotFoundError{keyName: string(contextKeyTokens)}
 	return nil, err
 }
 
