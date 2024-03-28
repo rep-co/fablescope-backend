@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 )
 
@@ -66,7 +67,7 @@ func (ts *TokenService) signJWT(token *jwt.Token) (string, error) {
 }
 
 func (ts *TokenService) generateRefreshToken() (string, error) {
-	refreshToken := "amogus"
+	refreshToken := uuid.New().String()
 
 	return refreshToken, nil
 }
