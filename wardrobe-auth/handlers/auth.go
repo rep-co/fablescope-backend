@@ -31,11 +31,22 @@ func HandleSingUp(
 
 func HandleSingIn(
 	w http.ResponseWriter,
-	_ *http.Request,
+	r *http.Request,
 	_ httprouter.Params,
 ) {
+	tokens, err := middlewares.GetTokensKey(r.Context())
+	if err != nil {
+		log.Printf("An error occured at HandleSignUp: %v.", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 
-	util.WriteJSON(w, http.StatusOK, "success")
+	err = util.WriteJSON(w, http.StatusOK, tokens)
+	if err != nil {
+		log.Printf("An error occured at HandleSignUp: %v.", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }
 
 func HandleRefresh(
