@@ -38,6 +38,7 @@ func main() {
 	}
 
 	accountService := services.NewAccountService(accountStorage)
+	tokenService := services.NewTokenService([]byte("amogus"))
 
 	router := httprouter.New()
 
@@ -60,6 +61,7 @@ func main() {
 				ctx,
 				handlers.HandleSingIn,
 				accountService,
+				tokenService,
 			),
 		),
 	)
