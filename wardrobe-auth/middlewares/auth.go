@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/database"
@@ -56,7 +55,7 @@ func SingUp(
 			return
 		}
 
-		err = accountService.CreateNewAccount(ctx, request)
+		idString, err := accountService.CreateNewAccount(ctx, request)
 		if err != nil {
 			log.Printf("An error occure at SingUp: %v.", err)
 			switch {
@@ -70,7 +69,16 @@ func SingUp(
 			return
 		}
 
-		next(w, r, ps)
+		response := &data.AccountResponse{
+			ID: idString,
+		}
+
+		ctxRequestValue := context.WithValue(
+			r.Context(),
+			contextKeyAccountResponse,
+			response,
+		)
+		next(w, r.WithContext(ctxRequestValue), ps)
 	}
 }
 
@@ -78,6 +86,7 @@ func SingIn(
 	ctx context.Context,
 	next httprouter.Handle,
 	accountService *services.AccountService,
+	tokenService *services.TokenService,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		request, err := GetAccountRequestKey(r.Context())
@@ -103,25 +112,16 @@ func SingIn(
 			return
 		}
 
-		// TODO: JWT cooking should also be it's own service
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-			ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(tokenTTL)},
-			Subject:   account.ID.String(),
-		})
-		tokenStr, err := token.SignedString([]byte("amogus"))
+		tokens, err := tokenService.IssueTokens(account)
 		if err != nil {
 			log.Printf("An error occure at SingIn: %v.", err)
 			return
 		}
-		refreshTokenStr := "amogus" //Cook refresh token
 
 		ctxRequestValue := context.WithValue(
 			r.Context(),
 			contextKeyTokens,
-			&data.Tokens{
-				JWTToken:     tokenStr,
-				RefreshToken: refreshTokenStr,
-			},
+			tokens,
 		)
 		next(w, r.WithContext(ctxRequestValue), ps)
 	}

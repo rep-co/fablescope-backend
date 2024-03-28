@@ -5,15 +5,28 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/middlewares"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/util"
 )
 
 func HandleSingUp(
 	w http.ResponseWriter,
-	_ *http.Request,
+	r *http.Request,
 	_ httprouter.Params,
 ) {
-	util.WriteJSON(w, http.StatusOK, "success")
+	response, err := middlewares.GetAccountResponseKey(r.Context())
+	if err != nil {
+		log.Printf("An error occured at HandleSignUp: %v.", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	err = util.WriteJSON(w, http.StatusOK, response)
+	if err != nil {
+		log.Printf("An error occured at HandleSignUp: %v.", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }
 
 func HandleSingIn(
