@@ -34,14 +34,14 @@ func NewAccountService(
 func (as *AccountService) CreateNewAccount(
 	ctx context.Context,
 	request *data.AccountRequest,
-) error {
+) (string, error) {
 	account := data.NewAccount(request)
 	hashedPassword, err := bcrypt.GenerateFromPassword(
 		[]byte(account.Password),
 		passwordHashingCost,
 	)
 	if err != nil {
-		return err
+		return "", err
 	}
 	account.Password = string(hashedPassword)
 
@@ -53,10 +53,10 @@ func (as *AccountService) CreateNewAccount(
 
 	err = as.accountStorage.CreateAccount(ctxTxDeadline, account)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return account.ID.String(), nil
 }
 
 // Tries to authorize given account.
