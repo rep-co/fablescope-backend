@@ -11,14 +11,14 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/data"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/database"
+	"github.com/rep-co/fablescope-backend/wardrobe-auth/services"
 	"github.com/rep-co/fablescope-backend/wardrobe-auth/util"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const (
-	passwordHashingCost = bcrypt.DefaultCost // 10
-	ydbRequestTTL       = time.Second * 5
-	tokenTTL            = time.Minute * 15
+	ydbRequestTTL = time.Second * 5
+	tokenTTL      = time.Minute * 15
 )
 
 func ValidateAccountCredentials(
@@ -46,7 +46,7 @@ func ValidateAccountCredentials(
 func SingUp(
 	ctx context.Context,
 	next httprouter.Handle,
-	s database.Storage,
+	accountService *services.AccountService,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		request, err := GetAccountRequestKey(r.Context())
@@ -56,31 +56,14 @@ func SingUp(
 			return
 		}
 
-		ctxTxDeadline, cancel := context.WithDeadline(
-			ctx,
-			time.Now().Add(ydbRequestTTL),
-		)
-		defer cancel()
-
-		// TODO: Mb it's a good idea to create some sort of a service
-		// and then refactor this, moving into it's dedicated service
-		account := data.NewAccount(request)
-		hashedPassword, err := bcrypt.GenerateFromPassword(
-			[]byte(account.Password),
-			passwordHashingCost,
-		)
+		err = accountService.CreateNewAccount(ctx, request)
 		if err != nil {
-			log.Printf("An error occure at SingUp: %v.", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		account.Password = string(hashedPassword)
-
-		if err := s.CreateAccount(ctxTxDeadline, account); err != nil {
 			log.Printf("An error occure at SingUp: %v.", err)
 			switch {
 			case errors.Is(err, &database.RequestTimeoutError):
 				http.Error(w, http.StatusText(http.StatusGatewayTimeout), http.StatusGatewayTimeout)
+			case errors.Is(err, &database.TransactionError):
+				http.Error(w, "An account with the given email already exists", http.StatusConflict)
 			default:
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
@@ -94,7 +77,7 @@ func SingUp(
 func SingIn(
 	ctx context.Context,
 	next httprouter.Handle,
-	s database.Storage,
+	s database.AccountStorage,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		request, err := GetAccountRequestKey(r.Context())
@@ -145,7 +128,7 @@ func SingIn(
 			log.Printf("An error occure at SingIn: %v.", err)
 			return
 		}
-		refreshTokenStr := "" //Cook refresh token
+		refreshTokenStr := "amogus" //Cook refresh token
 
 		ctxRequestValue := context.WithValue(
 			r.Context(),
@@ -162,7 +145,7 @@ func SingIn(
 func Refresh(
 	ctx context.Context,
 	next httprouter.Handle,
-	s database.Storage,
+	s database.AccountStorage,
 ) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		next(w, r, ps)
