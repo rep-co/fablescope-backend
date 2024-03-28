@@ -59,7 +59,7 @@ func main() {
 			middlewares.SingIn(
 				ctx,
 				handlers.HandleSingIn,
-				accountStorage,
+				accountService,
 			),
 		),
 	)
